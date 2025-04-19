@@ -93,6 +93,18 @@ export const userSettingsApi = {
     return response.data
   },
 
+  uploadProfileImage: async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await axiosInstance.post<User>('/user/profile-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
   exportData: async () => {
     const response = await axiosInstance.get('/user/export', {
       responseType: 'blob'

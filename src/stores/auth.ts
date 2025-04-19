@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '../types/user'
 import authService from '../services/auth'
+import { userSettingsApi } from '../services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -85,6 +86,30 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
   
+  const updateProfileImage = async (file: File) => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const updatedUser = await userSettingsApi.uploadProfileImage(file)
+      if (user.value) {
+        if (updatedUser && typeof updatedUser === 'object') {
+          user.value = {
+            ...user.value,
+            ...(updatedUser as Partial<User>)
+          }
+          localStorage.setItem('user', JSON.stringify(user.value))
+        }
+      }
+      return true
+    } catch (err: any) {
+      error.value = err.message || 'Failed to update profile image'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+  
   return {
     user,
     loading,
@@ -95,6 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithCredentials,
     loginWithGoogle,
     register,
-    logout
+    logout,
+    updateProfileImage
   }
 })
