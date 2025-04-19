@@ -62,7 +62,6 @@ const toggleDarkMode = () => {
 
 <template>
   <n-layout style="height: 100vh">
-    <!-- Mobile Header -->
     <n-layout-header class="mobile-header" bordered>
       <n-space justify="space-between" align="center" style="height: 100%; padding: 0 16px;">
         <n-button quaternary circle @click="showDrawer = true">
@@ -92,16 +91,13 @@ const toggleDarkMode = () => {
       </n-space>
     </n-layout-header>
     
-    <!-- Mobile Drawer -->
     <n-drawer v-model:show="showDrawer" placement="left" :width="280">
       <n-drawer-content title="WorkFlowGo" closable>
         <SideNavigation @close-drawer="showDrawer = false" />
       </n-drawer-content>
     </n-drawer>
     
-    <!-- Desktop Layout -->
     <n-layout has-sider position="absolute" style="top: 0; bottom: 0; left: 0; right: 0;">
-      <!-- Sidebar -->
       <n-layout-sider
         bordered
         collapse-mode="width"
@@ -119,9 +115,7 @@ const toggleDarkMode = () => {
         <SideNavigation />
       </n-layout-sider>
       
-      <!-- Main Content -->
       <n-layout>
-        <!-- Desktop Header -->
         <n-layout-header bordered class="desktop-header">
           <n-space justify="space-between" align="center" style="height: 100%; padding: 0 24px;">
             <div></div>
@@ -170,7 +164,6 @@ const toggleDarkMode = () => {
           </n-space>
         </n-layout-header>
         
-        <!-- Content -->
         <n-layout-content class="content">
           <slot></slot>
         </n-layout-content>

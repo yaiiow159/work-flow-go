@@ -20,6 +20,7 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
+const googleLoading = ref(false)
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
@@ -38,7 +39,14 @@ const handleLogin = async () => {
 }
 
 const handleGoogleLogin = async () => {
-  await authStore.loginWithGoogle()
+  googleLoading.value = true
+  try {
+    // This will redirect to Google's OAuth page
+    await authStore.loginWithGoogle()
+  } catch (error) {
+    googleLoading.value = false
+    message.error('Failed to initiate Google login')
+  }
 }
 
 const goToRegister = () => {
@@ -77,6 +85,7 @@ const goToRegister = () => {
           
           <n-button
             block
+            :loading="googleLoading"
             @click="handleGoogleLogin"
             class="google-button"
           >

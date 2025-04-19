@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 
 const emit = defineEmits(['toggle-sidebar'])
+const router = useRouter()
+const authStore = useAuthStore()
 
 const toggleSidebar = () => {
   emit('toggle-sidebar')
@@ -32,8 +36,20 @@ const notifications = ref([
   }
 ])
 
+const showUserMenu = ref(false)
+
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value
+  if (showNotifications.value) {
+    showUserMenu.value = false
+  }
+}
+
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+  if (showUserMenu.value) {
+    showNotifications.value = false
+  }
 }
 
 const markAsRead = (id: number) => {
@@ -42,6 +58,28 @@ const markAsRead = (id: number) => {
     notification.read = true
   }
 }
+
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push('/login')
+}
+
+const goToSettings = () => {
+  router.push('/settings')
+}
+
+const userInitials = computed(() => {
+  const name = authStore.userDisplayName
+  if (!name) return 'U'
+  
+  const parts = name.split(' ')
+  if (parts.length > 1) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase()
+})
+
+const userPhotoURL = computed(() => authStore.user?.photoURL)
 </script>
 
 <template>
@@ -119,11 +157,45 @@ const markAsRead = (id: number) => {
         </div>
         
         <div class="relative">
-          <button class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-              <span class="text-sm font-medium">JD</span>
+          <button 
+            @click="toggleUserMenu" 
+            class="flex items-center space-x-2"
+          >
+            <div v-if="userPhotoURL" class="w-8 h-8 rounded-full overflow-hidden">
+              <img :src="userPhotoURL" alt="User" class="w-full h-full object-cover" />
+            </div>
+            <div v-else class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+              <span class="text-sm font-medium">{{ userInitials }}</span>
             </div>
           </button>
+          
+          <div
+            v-if="showUserMenu" 
+            class="absolute right-0 mt-2 w-48 bg-surface rounded-card shadow-card z-10"
+          >
+            <div class="p-3 border-b border-surface-light">
+              <h3 class="font-medium">{{ authStore.userDisplayName }}</h3>
+              <p class="text-xs text-text-muted">{{ authStore.user?.email }}</p>
+            </div>
+            
+            <div class="py-1">
+              <button 
+                @click="goToSettings"
+                class="w-full px-4 py-2 text-left text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+              >
+                <i class="pi pi-cog mr-2"></i>
+                <span>Settings</span>
+              </button>
+              
+              <button 
+                @click="handleLogout"
+                class="w-full px-4 py-2 text-left text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+              >
+                <i class="pi pi-sign-out mr-2"></i>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

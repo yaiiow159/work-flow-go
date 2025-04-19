@@ -14,18 +14,8 @@ class AuthService {
     }
   }
 
-  async loginWithGoogle(): Promise<AuthResponse> {
-    window.location.href = `${apiBaseUrl}/api/auth/google`
-    return new Promise(() => {})
-  }
-
-  async handleGoogleCallback(code: string): Promise<AuthResponse> {
-    try {
-      const response = await axiosInstance.get(`/auth/google/callback?code=${code}`)
-      return response.data
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Google authentication failed')
-    }
+  async loginWithGoogle(): Promise<void> {
+    window.location.href = `${apiBaseUrl}/oauth2/authorization/google`
   }
 
   async register(email: string, password: string, displayName: string): Promise<AuthResponse> {

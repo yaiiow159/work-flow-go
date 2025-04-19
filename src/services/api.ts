@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance'
-import type { Interview, Document, User } from '../types'
+import type {Document, Interview, User} from '../types'
 
 export const interviewsApi = {
   getAll: async (params?: {
@@ -82,6 +82,12 @@ export const documentsApi = {
   }
 }
 
+export const userApi = {
+  getCurrentUser: async () => {
+    return await axiosInstance.get<User>('/user/me')
+  }
+}
+
 export const userSettingsApi = {
   get: async () => {
     const response = await axiosInstance.get<User>('/user/settings')
@@ -127,13 +133,3 @@ export const statisticsApi = {
     return response.data
   }
 }
-
-axiosInstance.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('API Error:', error.response?.data || error.message)
-    return Promise.reject(error)
-  }
-)
-
-export default axiosInstance

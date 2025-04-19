@@ -64,10 +64,10 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Settings', requiresAuth: true }
   },
   {
-    path: '/auth/google/callback',
-    name: 'GoogleCallback',
-    component: () => import('../views/GoogleCallback.vue'),
-    meta: { title: 'Processing Login' }
+    path: '/oauth2/redirect',
+    name: 'LoginSuccess',
+    component: () => import('../views/LoginSuccess.vue'),
+    meta: { title: 'Login Successful' }
   },
   {
     path: '/:pathMatch(.*)*',

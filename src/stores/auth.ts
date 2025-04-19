@@ -46,9 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     
     try {
-      const response = await authService.loginWithGoogle()
-      user.value = response.user
-      localStorage.setItem('user', JSON.stringify(response.user))
+      await authService.loginWithGoogle()
       return true
     } catch (err: any) {
       error.value = err.message || 'Google login failed'
@@ -83,6 +81,7 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       user.value = null
       localStorage.removeItem('user')
+      localStorage.removeItem('token')
     }
   }
   

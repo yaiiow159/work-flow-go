@@ -122,7 +122,6 @@ const closeUploadModal = () => {
         </n-space>
       </n-dropdown>
       
-      <!-- Profile Image Upload Modal -->
       <n-modal
         v-model:show="showUploadModal"
         preset="card"
