@@ -1,39 +1,39 @@
 <script setup lang="ts">
-import { ref, h, onMounted } from 'vue'
+import {h, onMounted, ref} from 'vue'
 import MainLayout from '../components/layout/MainLayout.vue'
-import { documentsApi } from '../services/api'
-import type { Document } from '../types'
-import { 
-  NCard, 
-  NSpace, 
-  NGrid, 
-  NGi, 
-  NButton, 
-  NIcon, 
-  NSpin, 
-  NEmpty, 
-  NUpload,
-  NInput,
-  NSelect,
-  NModal,
+import {documentsApi} from '../services/api'
+import type {Document} from '../types'
+import type {UploadFileInfo} from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NEmpty,
   NForm,
   NFormItem,
-  NDataTable,
+  NGi,
+  NGrid,
+  NIcon,
+  NInput,
+  NModal,
   NPopconfirm,
+  NSelect,
+  NSpace,
+  NSpin,
   NTag,
-  useMessage,
-  type TagProps
+  NUpload,
+  type TagProps,
+  useMessage
 } from 'naive-ui'
 import {
-  DocumentOutline,
   CloudUploadOutline,
-  EyeOutline,
+  DocumentOutline,
   DownloadOutline,
-  TrashOutline,
-  PencilOutline
+  EyeOutline,
+  PencilOutline,
+  TrashOutline
 } from '@vicons/ionicons5'
-import { format } from 'date-fns'
-import type { UploadFileInfo } from 'naive-ui'
+import {format} from 'date-fns'
 
 const message = useMessage()
 const isLoading = ref(false)
@@ -55,20 +55,14 @@ const documentTypeOptions = [
   { label: 'Other', value: 'other' }
 ]
 
-// Fetch all documents when component is mounted
 onMounted(async () => {
   await fetchDocuments()
 })
 
-// Fetch documents from the API
 const fetchDocuments = async () => {
   isLoading.value = true
   try {
-    // In a real implementation, we would have an endpoint to get all documents
-    // For now, we'll use the interviews endpoint to get documents from all interviews
-    const response = await fetch('/api/documents')
-    const data = await response.json()
-    documents.value = data
+    documents.value = await documentsApi.getAll()
   } catch (error) {
     console.error('Error fetching documents:', error)
     message.error('Failed to load documents')
@@ -139,13 +133,17 @@ const saveEditedDocument = async () => {
   
   isLoading.value = true
   try {
-    // In a real implementation, we would have an endpoint to update documents
-    // For now, we'll just update the local state
+    const updatedDoc = await documentsApi.update(
+      editingDocument.value.id,
+      {
+        name: editingDocument.value.name,
+        type: editingDocument.value.type
+      }
+    )
+    
     const index = documents.value.findIndex(doc => doc.id === editingDocument.value!.id)
     if (index !== -1) {
-      // In a real app, we would call an API endpoint here
-      // const updatedDoc = await documentsApi.update(editingDocument.value.id, editingDocument.value)
-      documents.value[index] = { ...editingDocument.value }
+      documents.value[index] = updatedDoc
       message.success('Document updated successfully')
       showEditModal.value = false
     }
@@ -172,13 +170,41 @@ const deleteDocument = async (id: string) => {
 }
 
 const downloadDocument = (doc: Document) => {
-  // Open the document URL in a new tab to download it
-  window.open(doc.url, '_blank')
+  try {
+    // Get the download URL from the API
+    const downloadUrl = documentsApi.getDownloadUrl(doc.id)
+    
+    // Create a hidden anchor element
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.setAttribute('download', doc.name)
+    link.setAttribute('target', '_blank')
+    
+    // Append to the document, click it, and remove it
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    message.success('Document download started')
+  } catch (error) {
+    console.error('Error downloading document:', error)
+    message.error('Failed to download document')
+  }
 }
 
 const viewDocument = (doc: Document) => {
-  // Open the document URL in a new tab to view it
-  window.open(doc.url, '_blank')
+  try {
+    // Get the view URL from the API
+    const viewUrl = documentsApi.getViewUrl(doc.id)
+    
+    // Open in a new tab
+    window.open(viewUrl, '_blank')
+    
+    message.success('Document opened for viewing')
+  } catch (error) {
+    console.error('Error viewing document:', error)
+    message.error('Failed to open document')
+  }
 }
 
 const renderIcon = (icon: any) => {
@@ -291,7 +317,6 @@ const columns = [
   <MainLayout>
     <div class="page-container">
       <n-space vertical size="large">
-        <!-- Header -->
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Documents</h1>
@@ -305,7 +330,6 @@ const columns = [
           </n-button>
         </n-space>
         
-        <!-- Document Types -->
         <n-grid cols="1 s:2 m:4" :x-gap="12" :y-gap="12">
           <n-gi v-for="type in documentTypeOptions" :key="type.value">
             <n-card hoverable>
@@ -322,7 +346,6 @@ const columns = [
           </n-gi>
         </n-grid>
         
-        <!-- Documents Table -->
         <n-card title="All Documents">
           <div v-if="isLoading" style="display: flex; justify-content: center; padding: 40px;">
             <n-spin size="large" />
@@ -348,7 +371,6 @@ const columns = [
         </n-card>
       </n-space>
       
-      <!-- Upload Modal -->
       <n-modal
         v-model:show="showUploadModal"
         preset="card"
@@ -381,7 +403,6 @@ const columns = [
         </n-form>
       </n-modal>
       
-      <!-- Edit Modal -->
       <n-modal
         v-model:show="showEditModal"
         preset="card"

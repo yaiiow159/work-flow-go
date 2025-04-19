@@ -5,7 +5,8 @@ import {
   NMenu, 
   NIcon,
   NSpace,
-  NButton
+  NButton,
+  NDivider
 } from 'naive-ui'
 import {
   HomeOutline,
@@ -14,6 +15,7 @@ import {
   DocumentOutline,
   SettingsOutline
 } from '@vicons/ionicons5'
+import UserProfile from './UserProfile.vue'
 
 defineEmits(['close-drawer'])
 
@@ -55,8 +57,7 @@ const menuOptions = computed(() => [
 const activeKey = computed(() => {
   if (route.path === '/') return '/'
   
-  // Find the menu option that matches the current route path
-  const matchingOption = menuOptions.value.find(option => 
+  const matchingOption = menuOptions.value.find(option =>
     route.path.startsWith(option.key) && option.key !== '/'
   )
   
@@ -69,13 +70,18 @@ const handleMenuClick = (key: string) => {
 </script>
 
 <template>
+  <div class="user-profile-container">
+    <UserProfile />
+  </div>
+  
+  <n-divider />
+  
   <n-menu
     :options="menuOptions"
     :value="activeKey"
     @update:value="handleMenuClick"
   />
   
-  <!-- Mobile only: Add a button to create new interview at the bottom -->
   <div class="mobile-new-interview">
     <n-space vertical>
       <n-button type="primary" block @click="router.push('/interviews/new')">
@@ -86,6 +92,10 @@ const handleMenuClick = (key: string) => {
 </template>
 
 <style scoped>
+.user-profile-container {
+  padding: 16px;
+}
+
 .mobile-new-interview {
   padding: 16px;
   margin-top: auto;

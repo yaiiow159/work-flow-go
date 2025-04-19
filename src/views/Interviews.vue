@@ -36,7 +36,6 @@ const isLoading = ref(true)
 const searchQuery = ref('')
 const statusFilter = ref<InterviewStatus | undefined>(undefined)
 
-// Status filter options
 const statusOptions: SelectOption[] = [
   { label: 'All Statuses', value: undefined },
   { label: 'Scheduled', value: 'scheduled' },
@@ -46,12 +45,10 @@ const statusOptions: SelectOption[] = [
   { label: 'Cancelled', value: 'cancelled' }
 ]
 
-// Format date for display
 const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'MMM dd, yyyy')
 }
 
-// Get status type for tag color
 const getStatusType = (status: string): TagProps['type'] => {
   switch (status) {
     case 'scheduled':
@@ -69,12 +66,10 @@ const getStatusType = (status: string): TagProps['type'] => {
   }
 }
 
-// Render icon helper
 const renderIcon = (icon: any) => {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
 
-// Data table columns
 const columns = computed<DataTableColumns<Interview>>(() => [
   {
     title: 'Company',
@@ -189,11 +184,9 @@ const columns = computed<DataTableColumns<Interview>>(() => [
   }
 ])
 
-// Filter interviews based on search query and status filter
 const filteredInterviews = computed(() => {
   let result = interviewStore.interviews
   
-  // Filter by search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(
@@ -204,7 +197,6 @@ const filteredInterviews = computed(() => {
     )
   }
   
-  // Filter by status
   if (statusFilter.value !== undefined) {
     result = result.filter(interview => interview.status === statusFilter.value)
   }
@@ -212,7 +204,6 @@ const filteredInterviews = computed(() => {
   return result
 })
 
-// Delete interview
 const deleteInterview = (id: string) => {
   interviewStore.deleteInterview(id)
     .then(() => {
@@ -223,14 +214,11 @@ const deleteInterview = (id: string) => {
     })
 }
 
-// Handle sorting
 const handleSorting = (sorter: { columnKey: string, order: 'ascend' | 'descend' | false }) => {
-  // In a real app, we would implement sorting logic here
-  // For now, we'll just log the sorting parameters
+
   console.log('Sorting by:', sorter.columnKey, sorter.order)
 }
 
-// Fetch interviews on component mount
 onMounted(async () => {
   try {
     await interviewStore.fetchInterviews()
@@ -247,7 +235,6 @@ onMounted(async () => {
   <MainLayout>
     <div class="page-container">
       <n-space vertical size="large">
-        <!-- Header -->
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Interviews</h1>
@@ -262,7 +249,6 @@ onMounted(async () => {
           </n-button>
         </n-space>
         
-        <!-- Filters -->
         <n-card>
           <n-space justify="space-between" align="center">
             <n-input
@@ -284,7 +270,6 @@ onMounted(async () => {
           </n-space>
         </n-card>
         
-        <!-- Interviews Table -->
         <n-card>
           <div v-if="isLoading || interviewStore.isLoading" style="display: flex; justify-content: center; padding: 40px;">
             <n-spin size="large" />

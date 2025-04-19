@@ -255,12 +255,9 @@ onMounted(async () => {
             </n-grid>
           </n-card>
           
-          <!-- Tabs for different sections -->
           <n-tabs type="line" animated>
-            <!-- Details Tab -->
             <n-tab-pane name="details" tab="Details">
               <n-grid cols="1 m:2" :x-gap="24" :y-gap="24">
-                <!-- Contact Person -->
                 <n-gi v-if="interview.contactPerson">
                   <n-card title="Contact Person">
                     <template #header-extra>
@@ -297,7 +294,6 @@ onMounted(async () => {
                   </n-card>
                 </n-gi>
                 
-                <!-- Location -->
                 <n-gi v-if="interview.location">
                   <n-card title="Location">
                     <template #header-extra>
@@ -318,7 +314,6 @@ onMounted(async () => {
                   </n-card>
                 </n-gi>
                 
-                <!-- Notes -->
                 <n-gi v-if="interview.notes">
                   <n-card title="Notes">
                     <template #header-extra>
@@ -329,7 +324,6 @@ onMounted(async () => {
                   </n-card>
                 </n-gi>
                 
-                <!-- Feedback -->
                 <n-gi v-if="interview.status === 'completed' && interview.feedback">
                   <n-card title="Feedback">
                     <template #header-extra>
@@ -384,7 +378,6 @@ onMounted(async () => {
               <n-empty v-else description="No questions added" />
             </n-tab-pane>
             
-            <!-- Documents Tab -->
             <n-tab-pane name="documents" tab="Documents">
               <div v-if="interview.documents && interview.documents.length > 0">
                 <n-list>

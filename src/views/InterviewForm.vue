@@ -150,20 +150,16 @@ const questionCategoryOptions = [
   { label: 'Other', value: 'other' }
 ]
 
-// Handle file upload
 const handleUpload = (options: any) => {
   const { file, onFinish } = options
   
-  // Create form data
   const formData = new FormData()
   formData.append('file', file.file)
   formData.append('name', file.name || file.file.name)
-  formData.append('type', 'other') // Default type
+  formData.append('type', 'other')
   
-  // Upload the file using the API service
   documentsApi.upload(file.file, file.name || file.file.name, 'other')
     .then(document => {
-      // Add the document to the interview
       formModel.documents.push({
         id: document.id,
         name: document.name,
@@ -181,12 +177,10 @@ const handleUpload = (options: any) => {
     })
 }
 
-// Remove a document
 const removeDocument = (index: number) => {
   formModel.documents.splice(index, 1)
 }
 
-// Add a new question
 const addQuestion = () => {
   formModel.questions.push({
     id: uuidv4(),
@@ -197,12 +191,10 @@ const addQuestion = () => {
   })
 }
 
-// Remove a question
 const removeQuestion = (index: number) => {
   formModel.questions.splice(index, 1)
 }
 
-// Save the interview
 const saveInterview = (e: Event) => {
   e.preventDefault()
   
@@ -217,7 +209,6 @@ const saveInterview = (e: Event) => {
     try {
       let result
       
-      // Make sure date and time are in the correct format
       if (!formModel.date && dateValue.value) {
         const date = new Date(dateValue.value)
         formModel.date = format(date, 'yyyy-MM-dd')
@@ -229,10 +220,8 @@ const saveInterview = (e: Event) => {
       }
       
       if (isEditMode.value) {
-        // Update existing interview
         result = await interviewStore.updateInterview(interviewId.value as string, formModel)
       } else {
-        // Create new interview
         result = await interviewStore.createInterview(formModel)
       }
       
@@ -251,12 +240,10 @@ const saveInterview = (e: Event) => {
   })
 }
 
-// Cancel and go back
 const cancel = () => {
   router.push('/interviews')
 }
 
-// Load interview data if editing
 onMounted(async () => {
   if (isEditMode.value) {
     isLoading.value = true
@@ -265,10 +252,8 @@ onMounted(async () => {
       const interview = await interviewStore.getInterviewById(interviewId.value as string)
       
       if (interview) {
-        // Copy interview data to form model
         Object.assign(formModel, interview)
         
-        // Set date and time values for pickers
         if (interview.date) {
           const date = parse(interview.date, 'yyyy-MM-dd', new Date())
           dateValue.value = date.getTime()
@@ -298,7 +283,6 @@ onMounted(async () => {
   <MainLayout>
     <div class="page-container">
       <n-space vertical size="large">
-        <!-- Header -->
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">{{ isEditMode ? 'Edit Interview' : 'New Interview' }}</h1>
@@ -324,12 +308,10 @@ onMounted(async () => {
           </n-space>
         </n-space>
         
-        <!-- Loading Spinner -->
         <div v-if="isLoading" style="display: flex; justify-content: center; padding: 40px;">
           <n-spin size="large" />
         </div>
         
-        <!-- Form -->
         <n-form
           v-else
           ref="formRef"
@@ -340,11 +322,9 @@ onMounted(async () => {
           require-mark-placement="right-hanging"
         >
           <n-tabs type="line" animated>
-            <!-- Basic Information -->
             <n-tab-pane name="basic" tab="Basic Information">
               <n-card>
                 <n-space vertical>
-                  <!-- Company Information -->
                   <div>
                     <h3>
                       <n-icon><BusinessOutline /></n-icon>
@@ -362,7 +342,6 @@ onMounted(async () => {
                   
                   <n-divider />
                   
-                  <!-- Interview Details -->
                   <div>
                     <h3>
                       <n-icon><CalendarOutline /></n-icon>
@@ -418,7 +397,6 @@ onMounted(async () => {
               </n-card>
             </n-tab-pane>
             
-            <!-- Contact Person -->
             <n-tab-pane name="contact" tab="Contact Person">
               <n-card>
                 <h3>
@@ -444,7 +422,6 @@ onMounted(async () => {
               </n-card>
             </n-tab-pane>
             
-            <!-- Questions -->
             <n-tab-pane name="questions" tab="Questions">
               <n-card>
                 <n-space vertical>
@@ -503,7 +480,6 @@ onMounted(async () => {
               </n-card>
             </n-tab-pane>
             
-            <!-- Documents -->
             <n-tab-pane name="documents" tab="Documents">
               <n-card>
                 <n-space vertical>
@@ -562,8 +538,7 @@ onMounted(async () => {
               </n-card>
             </n-tab-pane>
             
-            <!-- Feedback (only for completed interviews) -->
-            <n-tab-pane 
+            <n-tab-pane
               v-if="isEditMode && formModel.status === 'completed'" 
               name="feedback" 
               tab="Feedback"

@@ -44,7 +44,6 @@ const statsData = ref({
   byMonth: []
 })
 
-// Statistics
 const stats = computed(() => {
   const interviews = interviewStore.interviews
 
@@ -65,17 +64,14 @@ const stats = computed(() => {
   }
 })
 
-// Format date for display
 const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'MMM dd, yyyy')
 }
 
-// Format time for display
 const formatTime = (timeString: string) => {
   return timeString
 }
 
-// Get status type for tag color
 const getStatusType = (status: string) => {
   switch (status) {
     case 'scheduled':
@@ -98,21 +94,17 @@ const navigateTo = (path: string) => {
   router.push({ name: path })
 }
 
-// Fetch data on component mount
 onMounted(async () => {
   try {
     isLoading.value = true
 
-    // Fetch interviews
     await interviewStore.fetchInterviews()
 
-    // Fetch statistics
     try {
       const data = await statisticsApi.getInterviewStats()
       statsData.value = data
     } catch (err) {
       console.error('Failed to load statistics:', err)
-      // Continue with local stats if API fails
     }
   } catch (err) {
     console.error(err)
@@ -127,7 +119,6 @@ onMounted(async () => {
   <MainLayout>
     <div class="page-container">
       <n-space vertical size="large">
-        <!-- Header -->
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Dashboard</h1>
@@ -142,13 +133,11 @@ onMounted(async () => {
           </n-button>
         </n-space>
 
-        <!-- Loading state -->
         <div v-if="isLoading || interviewStore.isLoading" style="display: flex; justify-content: center; padding: 40px;">
           <n-spin size="large" />
         </div>
 
         <template v-else>
-          <!-- Statistics -->
           <n-grid cols="1 s:2 m:4" :x-gap="16" :y-gap="16">
             <n-gi>
               <n-card>
@@ -276,7 +265,6 @@ onMounted(async () => {
             </n-timeline>
           </n-card>
 
-          <!-- Recent Activity -->
           <n-card title="Recent Activity">
             <template #header-extra>
               <n-button text @click="navigateTo('interviews')">

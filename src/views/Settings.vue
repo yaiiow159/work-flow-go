@@ -34,7 +34,6 @@ import {
 const message = useMessage()
 const isLoading = ref(true)
 
-// Define the user settings structure to match the User interface
 interface UserSettings {
   theme: {
     darkMode: boolean
@@ -88,13 +87,11 @@ const viewOptions = [
   { label: 'List', value: 'list' }
 ]
 
-// Fetch user settings when component is mounted
 onMounted(async () => {
   try {
     isLoading.value = true
     const data = await userSettingsApi.get()
     
-    // Properly map the API response to our local state
     userSettings.value = {
       theme: data.preferences.theme || {
         darkMode: true,
@@ -126,7 +123,6 @@ const saveSettings = async () => {
   try {
     isLoading.value = true
     
-    // Prepare the user data in the format expected by the API
     const userData: Partial<User> = {
       name: userSettings.value.profile.name,
       email: userSettings.value.profile.email,
@@ -152,7 +148,6 @@ const resetSettings = async () => {
     isLoading.value = true
     const data = await userSettingsApi.resetSettings()
     
-    // Update local state with the reset data
     userSettings.value = {
       theme: data.preferences.theme || {
         darkMode: true,
@@ -187,7 +182,6 @@ const exportData = async () => {
     isLoading.value = true
     const blob = await userSettingsApi.exportData()
     
-    // Create a download link for the exported data
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

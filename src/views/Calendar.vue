@@ -29,26 +29,21 @@ const interviewStore = useInterviewStore()
 const message = useMessage()
 const isLoading = ref(true)
 
-// Current date state
 const currentDate = ref(new Date())
 const currentMonth = computed(() => format(currentDate.value, 'MMMM yyyy'))
 
-// Calendar data
 const calendarDays = computed(() => {
   const monthStart = startOfMonth(currentDate.value)
   const monthEnd = endOfMonth(currentDate.value)
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
   
-  // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
   const startDay = getDay(monthStart)
   
-  // Create empty slots for days before the first day of the month
   const emptyDays = Array(startDay).fill(null)
   
   return [...emptyDays, ...days]
 })
 
-// Get interviews for a specific day
 const getInterviewsForDay = (day: Date | null) => {
   if (!day) return []
   
@@ -58,17 +53,14 @@ const getInterviewsForDay = (day: Date | null) => {
   })
 }
 
-// Format date for display
 const formatDate = (date: Date) => {
   return format(date, 'd')
 }
 
-// Format time for display
 const formatTime = (timeString: string) => {
   return timeString
 }
 
-// Get status color
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'scheduled':
@@ -98,12 +90,10 @@ const nextMonth = () => {
   currentDate.value = newDate
 }
 
-// Navigate to current month
 const goToCurrentMonth = () => {
   currentDate.value = new Date()
 }
 
-// Fetch interviews on component mount
 onMounted(async () => {
   try {
     await interviewStore.fetchInterviews()
@@ -135,7 +125,6 @@ onMounted(async () => {
           </n-button>
         </n-space>
         
-        <!-- Calendar Navigation -->
         <n-card>
           <n-space justify="space-between" align="center">
             <n-space>
@@ -160,14 +149,12 @@ onMounted(async () => {
           </n-space>
         </n-card>
         
-        <!-- Calendar -->
         <n-card>
           <div v-if="isLoading || interviewStore.isLoading" style="display: flex; justify-content: center; padding: 40px;">
             <n-spin size="large" />
           </div>
           
           <template v-else>
-            <!-- Calendar Header -->
             <n-grid cols="7" :x-gap="4" :y-gap="4">
               <n-gi v-for="day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="day">
                 <div style="text-align: center; font-weight: 500; padding: 8px;">
@@ -181,17 +168,15 @@ onMounted(async () => {
               <n-gi v-for="(day, index) in calendarDays" :key="index">
                 <div 
                   :class="[
-                    'calendar-day', 
+                    'calendar-day',
                     day && isToday(day) ? 'today' : '',
                     !day ? 'empty-day' : ''
                   ]"
                 >
-                  <!-- Day number -->
                   <div v-if="day" class="day-number">
                     {{ formatDate(day) }}
                   </div>
-                  
-                  <!-- Interviews for this day -->
+
                   <div v-if="day" class="day-events">
                     <n-popover
                       v-for="interview in getInterviewsForDay(day)"

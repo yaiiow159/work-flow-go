@@ -1,17 +1,7 @@
-import axios from 'axios'
+import axiosInstance from './axiosInstance'
 import type { Interview, Document, User } from '../types'
 
-// Base API configuration
-const api = axios.create({
-  baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
-
-// Interviews API
 export const interviewsApi = {
-  // Get all interviews with optional filters
   getAll: async (params?: {
     status?: string
     from?: string
@@ -20,56 +10,48 @@ export const interviewsApi = {
     sort?: string
     order?: 'asc' | 'desc'
   }) => {
-    const response = await api.get<Interview[]>('/interviews', { params })
+    const response = await axiosInstance.get<Interview[]>('/interviews', { params })
     return response.data
   },
 
-  // Get interview by ID
   getById: async (id: string) => {
-    const response = await api.get<Interview>(`/interviews/${id}`)
+    const response = await axiosInstance.get<Interview>(`/interviews/${id}`)
     return response.data
   },
 
-  // Create a new interview
   create: async (interview: Omit<Interview, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const response = await api.post<Interview>('/interviews', interview)
+    const response = await axiosInstance.post<Interview>('/interviews', interview)
     return response.data
   },
 
-  // Update an existing interview
   update: async (id: string, interview: Partial<Interview>) => {
-    const response = await api.put<Interview>(`/interviews/${id}`, interview)
+    const response = await axiosInstance.put<Interview>(`/interviews/${id}`, interview)
     return response.data
   },
 
-  // Update only the status of an interview
   updateStatus: async (id: string, status: string) => {
-    const response = await api.patch<Interview>(`/interviews/${id}/status`, { status })
+    const response = await axiosInstance.patch<Interview>(`/interviews/${id}/status`, { status })
     return response.data
   },
 
-  // Delete an interview
   delete: async (id: string) => {
-    await api.delete(`/interviews/${id}`)
+    await axiosInstance.delete(`/interviews/${id}`)
   }
 }
 
-// Documents API
 export const documentsApi = {
-  // Get all documents
   getAll: async () => {
-    const response = await api.get<Document[]>('/documents')
+    const response = await axiosInstance.get<Document[]>('/documents')
     return response.data
   },
 
-  // Upload a document
   upload: async (file: File, name: string, type: string) => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('name', name)
     formData.append('type', type)
 
-    const response = await api.post<Document>('/documents', formData, {
+    const response = await axiosInstance.post<Document>('/documents', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -77,67 +59,69 @@ export const documentsApi = {
     return response.data
   },
 
-  // Get document by ID
   getById: async (id: string) => {
-    const response = await api.get<Document>(`/documents/${id}`)
+    const response = await axiosInstance.get<Document>(`/documents/${id}`)
+    return response.data
+  },
+  
+  update: async (id: string, document: Partial<Document>) => {
+    const response = await axiosInstance.put<Document>(`/documents/${id}`, document)
     return response.data
   },
 
-  // Delete a document
   delete: async (id: string) => {
-    await api.delete(`/documents/${id}`)
+    await axiosInstance.delete(`/documents/${id}`)
+  },
+  
+  getDownloadUrl: (id: string) => {
+    return `${axiosInstance.defaults.baseURL}/documents/${id}/download`
+  },
+  
+  getViewUrl: (id: string) => {
+    return `${axiosInstance.defaults.baseURL}/documents/${id}/view`
   }
 }
 
-// User Settings API
 export const userSettingsApi = {
-  // Get user settings
   get: async () => {
-    const response = await api.get<User>('/user/settings')
+    const response = await axiosInstance.get<User>('/user/settings')
     return response.data
   },
 
-  // Update user settings
   update: async (settings: Partial<User>) => {
-    const response = await api.put<User>('/user/settings', settings)
+    const response = await axiosInstance.put<User>('/user/settings', settings)
     return response.data
   },
 
-  // Export user data
   exportData: async () => {
-    const response = await api.get('/user/export', {
+    const response = await axiosInstance.get('/user/export', {
       responseType: 'blob'
     })
     return response.data
   },
 
-  // Reset user settings to defaults
   resetSettings: async () => {
-    const response = await api.post<User>('/user/settings/reset')
+    const response = await axiosInstance.post<User>('/user/settings/reset')
     return response.data
   }
 }
 
-// Statistics API
 export const statisticsApi = {
-  // Get interview statistics
   getInterviewStats: async (params?: {
     from?: string
     to?: string
   }) => {
-    const response = await api.get('/statistics/interviews', { params })
+    const response = await axiosInstance.get('/statistics/interviews', { params })
     return response.data
   }
 }
 
-// Error handling interceptor
-api.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   response => response,
   error => {
-    // Handle API errors here
     console.error('API Error:', error.response?.data || error.message)
     return Promise.reject(error)
   }
 )
 
-export default api
+export default axiosInstance
