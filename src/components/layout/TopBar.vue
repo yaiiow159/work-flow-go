@@ -47,7 +47,6 @@ const markAsRead = (id: number) => {
 <template>
   <header class="bg-surface border-b border-surface-light px-4 py-3">
     <div class="flex justify-between items-center">
-      <!-- Left side -->
       <div class="flex items-center">
         <button 
           @click="toggleSidebar" 
@@ -61,10 +60,8 @@ const markAsRead = (id: number) => {
         </div>
       </div>
       
-      <!-- Right side -->
       <div class="flex items-center space-x-4">
-        <!-- Add Interview Button -->
-        <router-link 
+        <router-link
           to="/interviews/new" 
           class="btn btn-primary hidden sm:flex items-center"
         >
@@ -72,7 +69,6 @@ const markAsRead = (id: number) => {
           <span>New Interview</span>
         </router-link>
         
-        <!-- Notifications -->
         <div class="relative">
           <button 
             @click="toggleNotifications" 
@@ -85,8 +81,7 @@ const markAsRead = (id: number) => {
             ></span>
           </button>
           
-          <!-- Notifications Dropdown -->
-          <div 
+          <div
             v-if="showNotifications" 
             class="absolute right-0 mt-2 w-80 bg-surface rounded-card shadow-card z-10"
           >
@@ -123,7 +118,6 @@ const markAsRead = (id: number) => {
           </div>
         </div>
         
-        <!-- User Profile -->
         <div class="relative">
           <button class="flex items-center space-x-2">
             <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">

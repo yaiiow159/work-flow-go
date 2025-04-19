@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import {computed, onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
 import MainLayout from '../components/layout/MainLayout.vue'
-import { useInterviewStore } from '../stores/interview'
-import { statisticsApi } from '../services/api'
-import { format } from 'date-fns'
+import {useInterviewStore} from '../stores/interview'
+import {statisticsApi} from '../services/api'
+import {format} from 'date-fns'
 import {
-  NCard,
-  NSpace,
   NButton,
-  NIcon,
-  NSpin,
+  NCard,
   NEmpty,
-  NGrid,
   NGi,
-  NStatistic,
+  NGrid,
+  NIcon,
   NNumberAnimation,
+  NSpace,
+  NSpin,
+  NStatistic,
   NTag,
   NTimeline,
   NTimelineItem,
   useMessage
 } from 'naive-ui'
 import {
-  CalendarOutline,
   BusinessOutline,
+  CalendarOutline,
   CheckmarkCircleOutline,
-  TrendingUpOutline,
+  TimeOutline,
   TrendingDownOutline,
-  TimeOutline
+  TrendingUpOutline
 } from '@vicons/ionicons5'
 
 const router = useRouter()
@@ -101,8 +101,7 @@ onMounted(async () => {
     await interviewStore.fetchInterviews()
 
     try {
-      const data = await statisticsApi.getInterviewStats()
-      statsData.value = data
+      statsData.value = await statisticsApi.getInterviewStats()
     } catch (err) {
       console.error('Failed to load statistics:', err)
     }

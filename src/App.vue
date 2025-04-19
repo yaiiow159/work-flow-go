@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { darkTheme } from 'naive-ui'
+import { darkTheme, NConfigProvider, NLoadingBarProvider, NDialogProvider, NNotificationProvider, NMessageProvider } from 'naive-ui'
 import { RouterView } from 'vue-router'
 </script>
 
