@@ -7,9 +7,19 @@ export interface User {
   token: string;
 }
 
+export interface UserInfo {
+
+}
+
 export interface AuthResponse {
   user: User;
   token: string;
+  tokenType: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface LoginCredentials {

@@ -24,7 +24,8 @@ import {
   NListItem,
   NThing,
   NPopconfirm,
-  useMessage
+  useMessage,
+  useDialog
 } from 'naive-ui'
 import {
   CalendarOutline,
@@ -41,11 +42,13 @@ import {
   StarOutline,
   ChatbubbleOutline
 } from '@vicons/ionicons5'
+import { handleApiError } from '../utils/errorHandler'
 
 const route = useRoute()
 const router = useRouter()
 const interviewStore = useInterviewStore()
 const message = useMessage()
+const dialog = useDialog()
 
 const isLoading = ref(true)
 const interview = ref<Interview | null>(null)
@@ -88,12 +91,15 @@ const deleteInterview = async () => {
     if (success) {
       message.success('Interview deleted successfully')
       router.push('/interviews')
-    } else {
-      throw new Error('Failed to delete interview')
+    } else if (interviewStore.error) {
+      dialog.error({
+        title: 'Delete Failed',
+        content: interviewStore.error,
+        positiveText: 'OK'
+      })
     }
   } catch (err) {
-    console.error(err)
-    message.error('Failed to delete interview')
+    handleApiError(err, 'Delete Failed')
   }
 }
 
@@ -106,12 +112,15 @@ const updateStatus = async (newStatus: string) => {
     if (updatedInterview) {
       interview.value = updatedInterview
       message.success('Status updated successfully')
-    } else {
-      throw new Error('Failed to update status')
+    } else if (interviewStore.error) {
+      dialog.error({
+        title: 'Status Update Failed',
+        content: interviewStore.error,
+        positiveText: 'OK'
+      })
     }
   } catch (err) {
-    console.error(err)
-    message.error('Failed to update status')
+    handleApiError(err, 'Status Update Failed')
   }
 }
 
@@ -122,12 +131,18 @@ onMounted(async () => {
     if (fetchedInterview) {
       interview.value = fetchedInterview
     } else {
-      message.error('Interview not found')
-      router.push('/interviews')
+      dialog.error({
+        title: 'Not Found',
+        content: 'Interview not found',
+        positiveText: 'OK',
+        onPositiveClick: () => {
+          router.push('/interviews')
+        }
+      })
     }
   } catch (err) {
-    console.error(err)
-    message.error('Failed to load interview details')
+    handleApiError(err, 'Failed to Load Interview')
+    router.push('/interviews')
   } finally {
     isLoading.value = false
   }
@@ -144,7 +159,6 @@ onMounted(async () => {
         </div>
         
         <template v-else-if="interview">
-          <!-- Header -->
           <n-space justify="space-between" align="center">
             <div>
               <n-space align="center">
@@ -183,7 +197,6 @@ onMounted(async () => {
             </n-space>
           </n-space>
           
-          <!-- Status and Date Card -->
           <n-card>
             <n-grid cols="1 m:3" :x-gap="16">
               <n-gi>
@@ -339,7 +352,6 @@ onMounted(async () => {
               </n-grid>
             </n-tab-pane>
             
-            <!-- Questions Tab -->
             <n-tab-pane name="questions" tab="Questions">
               <div v-if="interview.questions && interview.questions.length > 0">
                 <n-list>

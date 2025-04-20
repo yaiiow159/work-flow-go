@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance'
-import type { AuthResponse } from '../types/user'
+import type {AuthResponse, RegisterResponse} from '../types/user'
 import { getApiBaseUrl } from '../utils/environment'
 
 const apiBaseUrl = getApiBaseUrl()
@@ -18,7 +18,7 @@ class AuthService {
     window.location.href = `${apiBaseUrl}/oauth2/authorization/google`
   }
 
-  async register(email: string, password: string, displayName: string): Promise<AuthResponse> {
+  async register(email: string, password: string, displayName: string): Promise<RegisterResponse> {
     try {
       const response = await axiosInstance.post(`/auth/register`, {
         email,

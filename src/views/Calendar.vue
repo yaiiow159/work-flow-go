@@ -163,7 +163,6 @@ onMounted(async () => {
               </n-gi>
             </n-grid>
             
-            <!-- Calendar Days -->
             <n-grid cols="7" :x-gap="4" :y-gap="4">
               <n-gi v-for="(day, index) in calendarDays" :key="index">
                 <div 

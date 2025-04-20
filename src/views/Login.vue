@@ -41,7 +41,6 @@ const handleLogin = async () => {
 const handleGoogleLogin = async () => {
   googleLoading.value = true
   try {
-    // This will redirect to Google's OAuth page
     await authStore.loginWithGoogle()
   } catch (error) {
     googleLoading.value = false

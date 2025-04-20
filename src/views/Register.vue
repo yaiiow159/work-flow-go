@@ -8,12 +8,15 @@ import {
   NInput, 
   NButton, 
   NSpace,
-  useMessage
+  useMessage,
+  useDialog
 } from 'naive-ui'
 import { useAuthStore } from '../stores/auth'
+import { handleApiError } from '../utils/errorHandler'
 
 const router = useRouter()
 const message = useMessage()
+const dialog = useDialog()
 const authStore = useAuthStore()
 
 const email = ref('')
@@ -24,27 +27,50 @@ const loading = ref(false)
 
 const handleRegister = async () => {
   if (!email.value || !password.value || !confirmPassword.value || !displayName.value) {
-    message.error('Please fill in all fields')
+    dialog.error({
+      title: 'Form Error',
+      content: 'Please fill in all fields',
+      positiveText: 'OK'
+    })
     return
   }
   
   if (password.value !== confirmPassword.value) {
-    message.error('Passwords do not match')
+    dialog.error({
+      title: 'Password Error',
+      content: 'Passwords do not match',
+      positiveText: 'OK'
+    })
     return
   }
   
   if (password.value.length < 6) {
-    message.error('Password must be at least 6 characters')
+    dialog.error({
+      title: 'Password Error',
+      content: 'Password must be at least 6 characters',
+      positiveText: 'OK'
+    })
     return
   }
   
   loading.value = true
-  const success = await authStore.register(email.value, password.value, displayName.value)
-  loading.value = false
-  
-  if (success) {
-    message.success('Registration successful')
-    router.push('/')
+  try {
+    const success = await authStore.register(email.value, password.value, displayName.value)
+    
+    if (success) {
+      message.success('Registration successful')
+      router.push('/')
+    } else if (authStore.error) {
+      dialog.error({
+        title: 'Registration Failed',
+        content: authStore.error,
+        positiveText: 'OK'
+      })
+    }
+  } catch (error: any) {
+    handleApiError(error, 'Registration Failed')
+  } finally {
+    loading.value = false
   }
 }
 

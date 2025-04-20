@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance'
-import type {Document, Interview, User} from '../types'
+import type {Document, Interview, Notification, UserInfo, UserSettingsDTO, UserSettingsRequest, PasswordChangeRequest} from '../types'
 
 export const interviewsApi = {
   getAll: async (params?: {
@@ -84,18 +84,29 @@ export const documentsApi = {
 
 export const userApi = {
   getCurrentUser: async () => {
-    return await axiosInstance.get<User>('/user/me')
+    const response = await axiosInstance.get<UserInfo>('/user/me')
+    return response.data
+  },
+  
+  getUserProfile: async () => {
+    const response = await axiosInstance.get<UserInfo>('/user/profile')
+    return response.data
+  },
+  
+  changePassword: async (passwordChangeRequest: PasswordChangeRequest) => {
+    const response = await axiosInstance.post<string>('/user/change-password', passwordChangeRequest)
+    return response.data
   }
 }
 
 export const userSettingsApi = {
   get: async () => {
-    const response = await axiosInstance.get<User>('/user/settings')
+    const response = await axiosInstance.get<UserSettingsDTO>('/user/settings')
     return response.data
   },
 
-  update: async (settings: Partial<User>) => {
-    const response = await axiosInstance.put<User>('/user/settings', settings)
+  update: async (settingsRequest: UserSettingsRequest) => {
+    const response = await axiosInstance.put<UserSettingsDTO>('/user/settings', settingsRequest)
     return response.data
   },
 
@@ -103,7 +114,7 @@ export const userSettingsApi = {
     const formData = new FormData()
     formData.append('file', file)
     
-    const response = await axiosInstance.post<User>('/user/profile-image', formData, {
+    const response = await axiosInstance.post<UserSettingsDTO>('/users/profile/profile-image', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -117,9 +128,9 @@ export const userSettingsApi = {
     })
     return response.data
   },
-
+  
   resetSettings: async () => {
-    const response = await axiosInstance.post<User>('/user/settings/reset')
+    const response = await axiosInstance.post<UserSettingsDTO>('/user/settings/reset')
     return response.data
   }
 }
@@ -131,5 +142,31 @@ export const statisticsApi = {
   }) => {
     const response = await axiosInstance.get('/statistics/interviews', { params })
     return response.data
+  }
+}
+
+export const notificationsApi = {
+  getAll: async () => {
+    const response = await axiosInstance.get<Notification[]>('/notifications')
+    return response.data
+  },
+
+  markAsRead: async (id: string) => {
+    const response = await axiosInstance.patch<Notification>(`/notifications/${id}/read`)
+    return response.data
+  },
+
+  markAllAsRead: async () => {
+    const response = await axiosInstance.patch<{ success: boolean }>('/notifications/read-all')
+    return response.data
+  },
+
+  delete: async (id: string) => {
+    await axiosInstance.delete(`/notifications/${id}`)
+  },
+
+  getUnreadCount: async () => {
+    const response = await axiosInstance.get<{ count: number }>('/notifications/unread-count')
+    return response.data.count
   }
 }

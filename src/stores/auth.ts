@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '../types/user'
+import type { UserInfo, UserSettingsDTO } from '../types'
 import authService from '../services/auth'
 import { userSettingsApi } from '../services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
+  const userInfo = ref<UserInfo | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   
@@ -32,6 +34,9 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authService.loginWithCredentials(email, password)
       user.value = response.user
       localStorage.setItem('user', JSON.stringify(response.user))
+      if (response.user && response.user.token) {
+        localStorage.setItem('token', response.user.token)
+      }
       return true
     } catch (err: any) {
       error.value = err.message || 'Login failed'
@@ -62,9 +67,9 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await authService.register(email, password, displayName)
-      user.value = response.user
-      localStorage.setItem('user', JSON.stringify(response.user))
-      return true
+
+      return response.success;
+
     } catch (err: any) {
       error.value = err.message || 'Registration failed'
       return false
@@ -80,8 +85,11 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Logout error:', err)
     } finally {
       user.value = null
+      userInfo.value = null
       localStorage.removeItem('user')
       localStorage.removeItem('token')
+      
+      window.location.href = '/login'
     }
   }
   
@@ -90,15 +98,21 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     
     try {
-      const updatedUser = await userSettingsApi.uploadProfileImage(file)
-      if (user.value) {
-        if (updatedUser && typeof updatedUser === 'object') {
-          user.value = {
-            ...user.value,
-            ...(updatedUser as Partial<User>)
-          }
-          localStorage.setItem('user', JSON.stringify(user.value))
+      const updatedUserSettings: UserSettingsDTO = await userSettingsApi.uploadProfileImage(file)
+      
+      if (userInfo.value && updatedUserSettings.photoURL) {
+        userInfo.value = {
+          ...userInfo.value,
+          photoURL: updatedUserSettings.photoURL
         }
+      }
+      
+      if (user.value && updatedUserSettings.photoURL) {
+        user.value = {
+          ...user.value,
+          photoURL: updatedUserSettings.photoURL
+        }
+        localStorage.setItem('user', JSON.stringify(user.value))
       }
       return true
     } catch (err: any) {
@@ -111,6 +125,7 @@ export const useAuthStore = defineStore('auth', () => {
   
   return {
     user,
+    userInfo,
     loading,
     error,
     isAuthenticated,

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getApiBaseUrl } from '../utils/environment'
+import { handleApiError } from '../utils/errorHandler'
 
 const axiosInstance = axios.create({
   baseURL: getApiBaseUrl(),
@@ -10,7 +11,20 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token')
+    let token = localStorage.getItem('token')
+    
+    if (!token) {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          token = user.token
+        } catch (e) {
+          console.error('Error parsing user from localStorage:', e)
+        }
+      }
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -24,11 +38,14 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   response => response,
   error => {
-    if (error.response && error.response.status === 401) {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       localStorage.removeItem('user')
       localStorage.removeItem('token')
       window.location.href = '/login'
+    } else {
+      handleApiError(error)
     }
+    
     return Promise.reject(error)
   }
 )

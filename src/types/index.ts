@@ -75,3 +75,93 @@ export interface Reminder {
   message: string
   isCompleted: boolean
 }
+
+export interface Notification {
+  id: string
+  userId: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  isRead: boolean
+  createdAt: string
+  relatedEntityId?: string
+  relatedEntityType?: 'interview' | 'document' | 'system'
+}
+
+export interface UserInfo {
+  id: string
+  name: string
+  email: string
+  bio: string
+  phone: string
+  location: string
+  company: string
+  position: string
+  photoURL?: string
+  preferences?: {
+    theme: {
+      darkMode: boolean
+      primaryColor: string
+    }
+    notifications: {
+      enabled: boolean
+      emailNotifications: boolean
+      reminderTime: string
+    }
+    display: {
+      defaultView: 'calendar' | 'list'
+      compactMode: boolean
+    }
+  }
+}
+
+export interface UserPreferencesDTO {
+  theme: {
+    darkMode: boolean
+    primaryColor: string
+  }
+  notifications: {
+    enabled: boolean
+    emailNotifications: boolean
+    reminderTime: string
+  }
+  display: {
+    defaultView: 'calendar' | 'list'
+    compactMode: boolean
+  }
+}
+
+export interface UserSettingsDTO {
+  id: number
+  name: string
+  email: string
+  photoURL: string
+  emailVerified: boolean
+  preferences: UserPreferencesDTO
+}
+
+export interface UserSettingsRequest {
+  name?: string
+  email?: string
+  preferences?: {
+    theme?: {
+      darkMode?: boolean
+      primaryColor?: string
+    }
+    notifications?: {
+      enabled?: boolean
+      emailNotifications?: boolean
+      reminderTime?: string
+    }
+    display?: {
+      defaultView?: 'calendar' | 'list'
+      compactMode?: boolean
+    }
+  }
+}
+
+export interface PasswordChangeRequest {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}

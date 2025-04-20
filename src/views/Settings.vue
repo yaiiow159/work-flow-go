@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import MainLayout from '../components/layout/MainLayout.vue'
 import { userSettingsApi } from '../services/api'
-import type { User } from '../types'
+import type { UserSettingsRequest } from '../types'
 import { 
   NCard, 
   NSpace, 
@@ -30,6 +30,7 @@ import {
   CalendarOutline,
   PersonOutline
 } from '@vicons/ionicons5'
+import { handleApiError } from '../utils/errorHandler'
 
 const message = useMessage()
 const isLoading = ref(true)
@@ -93,16 +94,16 @@ onMounted(async () => {
     const data = await userSettingsApi.get()
     
     userSettings.value = {
-      theme: data.preferences.theme || {
+      theme: data.preferences?.theme || {
         darkMode: true,
         primaryColor: '#6366F1'
       },
-      notifications: data.preferences.notifications || {
+      notifications: data.preferences?.notifications || {
         enabled: true,
         emailNotifications: true,
         reminderTime: '1day'
       },
-      display: data.preferences.display || {
+      display: data.preferences?.display || {
         defaultView: 'calendar',
         compactMode: false
       },
@@ -112,8 +113,7 @@ onMounted(async () => {
       }
     }
   } catch (error) {
-    console.error('Error fetching user settings:', error)
-    message.error('Failed to load user settings')
+    handleApiError(error, 'Failed to Load Settings')
   } finally {
     isLoading.value = false
   }
@@ -123,7 +123,7 @@ const saveSettings = async () => {
   try {
     isLoading.value = true
     
-    const userData: Partial<User> = {
+    const settingsRequest: UserSettingsRequest = {
       name: userSettings.value.profile.name,
       email: userSettings.value.profile.email,
       preferences: {
@@ -133,11 +133,10 @@ const saveSettings = async () => {
       }
     }
     
-    await userSettingsApi.update(userData)
+    await userSettingsApi.update(settingsRequest)
     message.success('Settings saved successfully')
   } catch (error) {
-    console.error('Error saving user settings:', error)
-    message.error('Failed to save settings')
+    handleApiError(error, 'Failed to Save Settings')
   } finally {
     isLoading.value = false
   }
@@ -149,16 +148,16 @@ const resetSettings = async () => {
     const data = await userSettingsApi.resetSettings()
     
     userSettings.value = {
-      theme: data.preferences.theme || {
+      theme: data.preferences?.theme || {
         darkMode: true,
         primaryColor: '#6366F1'
       },
-      notifications: data.preferences.notifications || {
+      notifications: data.preferences?.notifications || {
         enabled: true,
         emailNotifications: true,
         reminderTime: '1day'
       },
-      display: data.preferences.display || {
+      display: data.preferences?.display || {
         defaultView: 'calendar',
         compactMode: false
       },
@@ -170,8 +169,7 @@ const resetSettings = async () => {
     
     message.info('Settings reset to defaults')
   } catch (error) {
-    console.error('Error resetting user settings:', error)
-    message.error('Failed to reset settings')
+    handleApiError(error, 'Failed to Reset Settings')
   } finally {
     isLoading.value = false
   }
@@ -192,8 +190,7 @@ const exportData = async () => {
     
     message.success('Data exported successfully')
   } catch (error) {
-    console.error('Error exporting user data:', error)
-    message.error('Failed to export data')
+    handleApiError(error, 'Failed to Export Data')
   } finally {
     isLoading.value = false
   }

@@ -29,6 +29,7 @@ import {
   NSwitch,
   NTag,
   useMessage,
+  useDialog
 } from 'naive-ui'
 import {
   SaveOutline,
@@ -42,11 +43,13 @@ import {
   HelpCircleOutline
 } from '@vicons/ionicons5'
 import { format, parse } from 'date-fns'
+import { handleApiError } from '../utils/errorHandler'
 
 const router = useRouter()
 const route = useRoute()
 const interviewStore = useInterviewStore()
 const message = useMessage()
+const dialog = useDialog()
 const formRef = ref<any>(null)
 
 const isLoading = ref(true)
@@ -79,11 +82,9 @@ const formModel = reactive<Interview>({
   updatedAt: ''
 })
 
-// Date and time values for pickers
 const dateValue = ref<number | null>(null)
 const timeValue = ref<number | null>(null)
 
-// Watch for changes in the date picker and update formModel
 watch(dateValue, (newValue) => {
   if (newValue) {
     const date = new Date(newValue)
@@ -93,7 +94,6 @@ watch(dateValue, (newValue) => {
   }
 })
 
-// Watch for changes in the time picker and update formModel
 watch(timeValue, (newValue) => {
   if (newValue) {
     const date = new Date(newValue)
@@ -103,7 +103,6 @@ watch(timeValue, (newValue) => {
   }
 })
 
-// Form rules
 const rules: any = {
   companyName: [
     { required: true, message: 'Please enter the company name', trigger: 'blur' }
@@ -171,8 +170,7 @@ const handleUpload = (options: any) => {
       onFinish()
     })
     .catch(error => {
-      console.error('Upload error:', error)
-      message.error(`Failed to upload ${file.file.name}`)
+      handleApiError(error, 'Upload Failed')
       onFinish()
     })
 }
@@ -200,7 +198,11 @@ const saveInterview = (e: Event) => {
   
   formRef.value?.validate(async (errors: any) => {
     if (errors) {
-      message.error('Please fix the form errors')
+      dialog.error({
+        title: 'Form Error',
+        content: 'Please fix the form errors before saving',
+        positiveText: 'OK'
+      })
       return
     }
     
@@ -228,12 +230,15 @@ const saveInterview = (e: Event) => {
       if (result) {
         message.success(`Interview ${isEditMode.value ? 'updated' : 'created'} successfully`)
         router.push('/interviews')
-      } else {
-        message.error(`Failed to ${isEditMode.value ? 'update' : 'create'} interview`)
+      } else if (interviewStore.error) {
+        dialog.error({
+          title: `Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview`,
+          content: interviewStore.error,
+          positiveText: 'OK'
+        })
       }
     } catch (err) {
-      console.error(err)
-      message.error(`Failed to ${isEditMode.value ? 'update' : 'create'} interview`)
+      handleApiError(err, `Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview`)
     } finally {
       isSaving.value = false
     }
@@ -266,15 +271,20 @@ onMounted(async () => {
           timeValue.value = date.getTime()
         }
       } else {
-        message.error('Interview not found')
+        dialog.error({
+          title: 'Not Found',
+          content: 'Interview not found',
+          positiveText: 'OK'
+        })
         router.push('/interviews')
       }
     } catch (err) {
-      console.error(err)
-      message.error('Failed to load interview details')
+      handleApiError(err, 'Failed to Load Interview')
     } finally {
       isLoading.value = false
     }
+  } else {
+    isLoading.value = false
   }
 })
 </script>

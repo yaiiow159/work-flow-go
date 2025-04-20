@@ -1,5 +1,5 @@
-const DEV_API_URL = 'http://localhost:8081'
-const PROD_API_URL = 'https://work-flow-go-server.onrender.com'
+const DEV_API_URL = 'http://localhost:8081/api'
+const PROD_API_URL = 'https://work-flow-go-server.onrender.com/api'
 
 export const getApiBaseUrl = (): string => {
   return import.meta.env.MODE === 'production' ? PROD_API_URL : DEV_API_URL

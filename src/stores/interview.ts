@@ -1,7 +1,7 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { Interview, InterviewStatus } from '../types'
-import { interviewsApi } from '../services/api'
+import {defineStore} from 'pinia'
+import {computed, ref} from 'vue'
+import type {Interview, InterviewStatus} from '../types'
+import {interviewsApi} from '../services/api'
 
 export const useInterviewStore = defineStore('interview', () => {
   const interviews = ref<Interview[]>([])
@@ -43,8 +43,7 @@ export const useInterviewStore = defineStore('interview', () => {
     error.value = null
     
     try {
-      const data = await interviewsApi.getAll()
-      interviews.value = data
+      interviews.value = await interviewsApi.getAll()
     } catch (err) {
       error.value = 'Failed to fetch interviews'
       console.error(err)

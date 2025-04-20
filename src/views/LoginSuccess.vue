@@ -25,16 +25,14 @@ onMounted(async () => {
 
     const response = await userApi.getCurrentUser()
 
-    if (!response.data) {
+    if (!response) {
       throw new Error('No user data received from authentication')
     }
-
-    const responseData = response.data;
     
     const userData: User = {
-      id: responseData.id,
-      email: responseData.email,
-      displayName: responseData.name || undefined,
+      id: response.id,
+      email: response.email,
+      displayName: response.name || undefined,
       authProvider: 'google' as const,
       token: token
     }

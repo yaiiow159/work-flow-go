@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, h } from 'vue'
+import { ref, h, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SideNavigation from './SideNavigation.vue'
 import { 
@@ -27,10 +27,21 @@ import {
   MoonOutline,
   SunnyOutline
 } from '@vicons/ionicons5'
+import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const showDrawer = ref(false)
 const isDarkMode = ref(true)
+
+// Initialize dark mode from localStorage on component mount
+onMounted(() => {
+  const savedDarkMode = localStorage.getItem('darkMode')
+  if (savedDarkMode !== null) {
+    isDarkMode.value = savedDarkMode === 'true'
+    applyDarkMode(isDarkMode.value)
+  }
+})
 
 const userDropdownOptions = [
   {
@@ -49,14 +60,29 @@ const handleUserDropdown = (key: string) => {
   if (key === 'settings') {
     router.push('/settings')
   } else if (key === 'logout') {
-    // Handle logout
-    console.log('Logout clicked')
+    authStore.logout()
   }
 }
 
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value
-  // In a real app, you would update user preferences in the store/backend
+  localStorage.setItem('darkMode', isDarkMode.value.toString())
+  
+  window.dispatchEvent(new CustomEvent('themeChange', {
+    detail: { isDark: isDarkMode.value } 
+  }))
+  
+  applyDarkMode(isDarkMode.value)
+}
+
+const applyDarkMode = (isDark: boolean) => {
+  if (isDark) {
+    document.documentElement.classList.add('dark-theme')
+    document.documentElement.classList.remove('light-theme')
+  } else {
+    document.documentElement.classList.add('light-theme')
+    document.documentElement.classList.remove('dark-theme')
+  }
 }
 </script>
 

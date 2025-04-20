@@ -6,9 +6,20 @@ import './style.css'
 
 import 'vfonts/Lato.css'
 import 'vfonts/FiraCode.css'
-
-import axiosInstance from './services/axiosInstance'
 import { useAuthStore } from './stores/auth'
+import { createDiscreteApi } from 'naive-ui'
+
+const { message, notification, dialog, loadingBar } = createDiscreteApi([
+  'message',
+  'dialog',
+  'notification',
+  'loadingBar'
+])
+
+window.$message = message
+window.$dialog = dialog
+window.$notification = notification
+window.$loadingBar = loadingBar
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -17,25 +28,6 @@ app.use(pinia)
 app.use(router)
 
 const authStore = useAuthStore(pinia)
-
-axiosInstance.interceptors.request.use(config => {
-  const token = authStore.user?.token
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
-axiosInstance.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response && error.response.status === 401) {
-      authStore.logout()
-      router.push('/login')
-    }
-    return Promise.reject(error)
-  }
-)
 
 authStore.initAuth().finally(() => {
   app.mount('#app')

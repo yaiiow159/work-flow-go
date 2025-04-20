@@ -23,7 +23,8 @@ import {
   NTag,
   NUpload,
   type TagProps,
-  useMessage
+  useMessage,
+  useDialog
 } from 'naive-ui'
 import {
   CloudUploadOutline,
@@ -34,8 +35,10 @@ import {
   TrashOutline
 } from '@vicons/ionicons5'
 import {format} from 'date-fns'
+import { handleApiError } from '../utils/errorHandler'
 
 const message = useMessage()
+const dialog = useDialog()
 const isLoading = ref(false)
 const documents = ref<Document[]>([])
 
@@ -64,8 +67,7 @@ const fetchDocuments = async () => {
   try {
     documents.value = await documentsApi.getAll()
   } catch (error) {
-    console.error('Error fetching documents:', error)
-    message.error('Failed to load documents')
+    handleApiError(error, 'Failed to Load Documents')
   } finally {
     isLoading.value = false
   }
@@ -82,7 +84,11 @@ const formatDate = (dateString: string) => {
 
 const handleUpload = async () => {
   if (!newDocument.value.name || uploadFileList.value.length === 0) {
-    message.error('Please provide a name and select a file')
+    dialog.error({
+      title: 'Form Error',
+      content: 'Please provide a name and select a file',
+      positiveText: 'OK'
+    })
     return
   }
   
@@ -90,7 +96,11 @@ const handleUpload = async () => {
   try {
     const file = uploadFileList.value[0].file
     if (!file) {
-      message.error('No file selected')
+      dialog.error({
+        title: 'Upload Error',
+        content: 'No file selected',
+        positiveText: 'OK'
+      })
       return
     }
     
@@ -104,8 +114,7 @@ const handleUpload = async () => {
     message.success('Document uploaded successfully')
     resetUploadForm()
   } catch (error) {
-    console.error('Error uploading document:', error)
-    message.error('Failed to upload document')
+    handleApiError(error, 'Upload Failed')
   } finally {
     isLoading.value = false
   }
@@ -127,7 +136,11 @@ const openEditModal = (doc: Document) => {
 
 const saveEditedDocument = async () => {
   if (!editingDocument.value || !editingDocument.value.name) {
-    message.error('Please provide a name')
+    dialog.error({
+      title: 'Form Error',
+      content: 'Please provide a name',
+      positiveText: 'OK'
+    })
     return
   }
   
@@ -148,8 +161,7 @@ const saveEditedDocument = async () => {
       showEditModal.value = false
     }
   } catch (error) {
-    console.error('Error updating document:', error)
-    message.error('Failed to update document')
+    handleApiError(error, 'Update Failed')
   } finally {
     isLoading.value = false
   }
@@ -162,8 +174,7 @@ const deleteDocument = async (id: string) => {
     documents.value = documents.value.filter(doc => doc.id !== id)
     message.success('Document deleted successfully')
   } catch (error) {
-    console.error('Error deleting document:', error)
-    message.error('Failed to delete document')
+    handleApiError(error, 'Delete Failed')
   } finally {
     isLoading.value = false
   }
@@ -171,24 +182,20 @@ const deleteDocument = async (id: string) => {
 
 const downloadDocument = (doc: Document) => {
   try {
-    // Get the download URL from the API
     const downloadUrl = documentsApi.getDownloadUrl(doc.id)
     
-    // Create a hidden anchor element
     const link = document.createElement('a')
     link.href = downloadUrl
     link.setAttribute('download', doc.name)
     link.setAttribute('target', '_blank')
     
-    // Append to the document, click it, and remove it
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     
     message.success('Document download started')
   } catch (error) {
-    console.error('Error downloading document:', error)
-    message.error('Failed to download document')
+    handleApiError(error, 'Download Failed')
   }
 }
 
@@ -202,8 +209,7 @@ const viewDocument = (doc: Document) => {
     
     message.success('Document opened for viewing')
   } catch (error) {
-    console.error('Error viewing document:', error)
-    message.error('Failed to open document')
+    handleApiError(error, 'View Failed')
   }
 }
 

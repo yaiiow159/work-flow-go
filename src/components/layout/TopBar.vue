@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useNotificationsStore } from '../../stores/notifications'
+import NotificationItem from '../notifications/NotificationItem.vue'
 
 const emit = defineEmits(['toggle-sidebar'])
 const router = useRouter()
 const authStore = useAuthStore()
+const notificationsStore = useNotificationsStore()
 
 const toggleSidebar = () => {
   emit('toggle-sidebar')
@@ -19,29 +22,13 @@ const currentDate = new Date().toLocaleDateString('en-US', {
 })
 
 const showNotifications = ref(false)
-const notifications = ref([
-  {
-    id: 1,
-    title: 'Interview Reminder',
-    message: 'You have an interview with ABC Corp tomorrow at 10:00 AM',
-    time: '1 hour ago',
-    read: false
-  },
-  {
-    id: 2,
-    title: 'Document Update',
-    message: 'Your resume has been updated successfully',
-    time: '2 days ago',
-    read: true
-  }
-])
-
 const showUserMenu = ref(false)
 
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value
   if (showNotifications.value) {
     showUserMenu.value = false
+    notificationsStore.fetchNotifications()
   }
 }
 
@@ -52,11 +39,16 @@ const toggleUserMenu = () => {
   }
 }
 
-const markAsRead = (id: number) => {
-  const notification = notifications.value.find(n => n.id === id)
-  if (notification) {
-    notification.read = true
-  }
+const handleMarkAsRead = async (id: string) => {
+  await notificationsStore.markAsRead(id)
+}
+
+const handleMarkAllAsRead = async () => {
+  await notificationsStore.markAllAsRead()
+}
+
+const handleDeleteNotification = async (id: string) => {
+  await notificationsStore.deleteNotification(id)
 }
 
 const handleLogout = async () => {
@@ -66,6 +58,10 @@ const handleLogout = async () => {
 
 const goToSettings = () => {
   router.push('/settings')
+}
+
+const goToProfile = () => {
+  router.push('/profile')
 }
 
 const userInitials = computed(() => {
@@ -80,6 +76,10 @@ const userInitials = computed(() => {
 })
 
 const userPhotoURL = computed(() => authStore.user?.photoURL)
+
+onMounted(async () => {
+  await notificationsStore.fetchNotifications()
+})
 </script>
 
 <template>
@@ -114,7 +114,7 @@ const userPhotoURL = computed(() => authStore.user?.photoURL)
           >
             <i class="pi pi-bell text-xl"></i>
             <span 
-              v-if="notifications.some(n => !n.read)" 
+              v-if="notificationsStore.unreadCount > 0" 
               class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"
             ></span>
           </button>
@@ -123,33 +123,33 @@ const userPhotoURL = computed(() => authStore.user?.photoURL)
             v-if="showNotifications" 
             class="absolute right-0 mt-2 w-80 bg-surface rounded-card shadow-card z-10"
           >
-            <div class="p-3 border-b border-surface-light">
+            <div class="p-3 border-b border-surface-light flex justify-between items-center">
               <h3 class="font-medium">Notifications</h3>
+              <span v-if="notificationsStore.unreadCount > 0" class="text-xs bg-primary text-white px-2 py-0.5 rounded-full">
+                {{ notificationsStore.unreadCount }}
+              </span>
             </div>
             
             <div class="max-h-96 overflow-y-auto">
-              <template v-if="notifications.length > 0">
-                <div 
-                  v-for="notification in notifications" 
+              <template v-if="notificationsStore.notifications.length > 0">
+                <NotificationItem
+                  v-for="notification in notificationsStore.notifications" 
                   :key="notification.id"
-                  @click="markAsRead(notification.id)"
-                  class="p-3 border-b border-surface-light hover:bg-background-lighter cursor-pointer"
-                  :class="{ 'bg-background-lighter': !notification.read }"
-                >
-                  <div class="flex justify-between">
-                    <h4 class="font-medium">{{ notification.title }}</h4>
-                    <span class="text-xs text-text-muted">{{ notification.time }}</span>
-                  </div>
-                  <p class="text-sm text-text-secondary mt-1">{{ notification.message }}</p>
-                </div>
+                  :notification="notification"
+                  @mark-as-read="handleMarkAsRead"
+                  @delete="handleDeleteNotification"
+                />
               </template>
               <div v-else class="p-4 text-center text-text-muted">
                 No notifications
               </div>
             </div>
             
-            <div class="p-2 border-t border-surface-light text-center">
-              <button class="text-sm text-primary hover:text-primary-hover">
+            <div v-if="notificationsStore.notifications.length > 0" class="p-2 border-t border-surface-light text-center">
+              <button 
+                @click="handleMarkAllAsRead"
+                class="text-sm text-primary hover:text-primary-hover"
+              >
                 Mark all as read
               </button>
             </div>
@@ -179,6 +179,14 @@ const userPhotoURL = computed(() => authStore.user?.photoURL)
             </div>
             
             <div class="py-1">
+              <button 
+                @click="goToProfile"
+                class="w-full px-4 py-2 text-left text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+              >
+                <i class="pi pi-user mr-2"></i>
+                <span>Profile</span>
+              </button>
+              
               <button 
                 @click="goToSettings"
                 class="w-full px-4 py-2 text-left text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"

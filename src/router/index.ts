@@ -58,13 +58,19 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Interview Calendar', requiresAuth: true }
   },
   {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('../views/Profile.vue'),
+    meta: { title: 'User Profile', requiresAuth: true }
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('../views/Settings.vue'),
     meta: { title: 'Settings', requiresAuth: true }
   },
   {
-    path: '/oauth2/redirect',
+    path: '/oauth2/redirect/google',
     name: 'LoginSuccess',
     component: () => import('../views/LoginSuccess.vue'),
     meta: { title: 'Login Successful' }
