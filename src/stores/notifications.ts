@@ -17,7 +17,12 @@ export const useNotificationsStore = defineStore('notifications', () => {
     error.value = null
     
     try {
-      notifications.value = await notificationsApi.getAll()
+      try {
+        notifications.value = await notificationsApi.getAll()
+      } catch (apiError) {
+        console.warn('API error:', apiError)
+        notifications.value = []
+      }
       return true
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch notifications'

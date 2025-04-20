@@ -4,7 +4,7 @@
       <div class="flex justify-between items-center mb-8">
         <button 
           @click="goBack" 
-          class="text-green-300 hover:text-green-200 flex items-center group transition-all duration-300 hover:scale-105"
+          class="text-blue-400 hover:text-blue-300 flex items-center group transition-all duration-300 hover:scale-105"
         >
           <i class="pi pi-arrow-left mr-2 transition-transform duration-300 group-hover:-translate-x-1"></i>
           Back
@@ -13,11 +13,11 @@
         <div class="w-16"></div>
       </div>
       
-      <div class="bg-gray-900 rounded-lg shadow-xl overflow-hidden mb-8 animate-slide-up">
-        <div class="bg-gradient-to-r from-green-900/80 to-teal-900/80 p-8">
+      <div class="bg-[#18181c] rounded-lg shadow-xl overflow-hidden mb-8 animate-slide-up">
+        <div class="bg-gradient-to-r from-[#0c2461]/90 to-[#1e3799]/90 p-8">
           <div class="flex flex-col md:flex-row items-center">
             <div class="relative mb-6 md:mb-0 md:mr-8 animate-fade-in">
-              <div v-if="profileImagePreview || userPhotoURL" class="w-32 h-32 rounded-full overflow-hidden border-4 border-green-400 shadow-lg hover:scale-105 transition-transform duration-300">
+              <div v-if="profileImagePreview || userPhotoURL" class="w-32 h-32 rounded-full overflow-hidden border-4 border-[#4a69bd] shadow-lg hover:scale-105 transition-transform duration-300">
                 <img 
                   :src="profileImagePreview || userPhotoURL" 
                   alt="Profile" 
@@ -26,12 +26,12 @@
               </div>
               <div 
                 v-else 
-                class="w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white border-4 border-green-400 shadow-lg hover:scale-105 transition-transform duration-300"
+                class="w-32 h-32 rounded-full bg-gradient-to-br from-[#4a69bd] to-[#0c2461] flex items-center justify-center text-white border-4 border-[#4a69bd] shadow-lg hover:scale-105 transition-transform duration-300"
               >
                 <span class="text-3xl font-medium">{{ userInitials }}</span>
               </div>
               
-              <label class="absolute bottom-0 right-0 bg-green-600 rounded-full p-2 shadow-lg cursor-pointer hover:bg-green-500 transition-all duration-300 hover:scale-110">
+              <label class="absolute bottom-0 right-0 bg-[#4a69bd] rounded-full p-2 shadow-lg cursor-pointer hover:bg-[#6a89cc] transition-all duration-300 hover:scale-110">
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -44,18 +44,18 @@
             
             <div class="text-center md:text-left flex-1 animate-fade-in">
               <h2 class="text-2xl font-bold mb-1 text-white">{{ profileForm.name || authStore.userDisplayName }}</h2>
-              <p class="text-green-200 mb-4">{{ profileForm.email || authStore.user?.email }}</p>
+              <p class="text-blue-200 mb-4">{{ profileForm.email || authStore.user?.email }}</p>
               <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-3">
-                <div v-if="profileForm.position" class="inline-flex items-center px-3 py-1 bg-green-900/50 text-green-200 rounded-full text-sm shadow-md border border-green-700/50 hover:bg-green-800/50 transition-colors duration-300">
-                  <i class="pi pi-briefcase mr-1 text-green-300"></i>
+                <div v-if="profileForm.position" class="inline-flex items-center px-3 py-1 bg-[#0c2461]/50 text-blue-200 rounded-full text-sm shadow-md border border-[#4a69bd]/50 hover:bg-[#1e3799]/50 transition-colors duration-300">
+                  <i class="pi pi-briefcase mr-1 text-blue-300"></i>
                   {{ profileForm.position }}
                 </div>
-                <div v-if="profileForm.company" class="inline-flex items-center px-3 py-1 bg-teal-900/50 text-teal-200 rounded-full text-sm shadow-md border border-teal-700/50 hover:bg-teal-800/50 transition-colors duration-300">
-                  <i class="pi pi-building mr-1 text-teal-300"></i>
+                <div v-if="profileForm.company" class="inline-flex items-center px-3 py-1 bg-[#1e3799]/50 text-blue-200 rounded-full text-sm shadow-md border border-[#4a69bd]/50 hover:bg-[#0c2461]/50 transition-colors duration-300">
+                  <i class="pi pi-building mr-1 text-blue-300"></i>
                   {{ profileForm.company }}
                 </div>
-                <div v-if="profileForm.location" class="inline-flex items-center px-3 py-1 bg-emerald-900/50 text-emerald-200 rounded-full text-sm shadow-md border border-emerald-700/50 hover:bg-emerald-800/50 transition-colors duration-300">
-                  <i class="pi pi-map-marker mr-1 text-emerald-300"></i>
+                <div v-if="profileForm.location" class="inline-flex items-center px-3 py-1 bg-[#0c2461]/50 text-blue-200 rounded-full text-sm shadow-md border border-[#4a69bd]/50 hover:bg-[#1e3799]/50 transition-colors duration-300">
+                  <i class="pi pi-map-marker mr-1 text-blue-300"></i>
                   {{ profileForm.location }}
                 </div>
               </div>
@@ -63,32 +63,32 @@
           </div>
         </div>
         
-        <div class="p-8 bg-gray-900">
+        <div class="p-8 bg-[#18181c]">
           <form @submit.prevent="saveProfile">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="form-group animate-fade-in" style="animation-delay: 100ms;">
-                <label for="name" class="form-label font-medium text-green-200">Full Name</label>
+                <label for="name" class="form-label font-medium text-blue-200">Full Name</label>
                 <div class="relative">
-                  <i class="pi pi-user absolute left-3 top-3 text-green-400"></i>
+                  <i class="pi pi-user absolute left-3 top-3 text-blue-400"></i>
                   <input 
                     id="name"
                     v-model="profileForm.name"
                     type="text" 
-                    class="form-input pl-10 bg-gray-800 border-gray-700 text-white focus:border-green-500 focus:ring focus:ring-green-500/30 rounded-md shadow-md"
+                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
                     placeholder="Your full name"
                   />
                 </div>
               </div>
               
               <div class="form-group animate-fade-in" style="animation-delay: 150ms;">
-                <label for="email" class="form-label font-medium text-green-200">Email</label>
+                <label for="email" class="form-label font-medium text-blue-200">Email</label>
                 <div class="relative">
-                  <i class="pi pi-envelope absolute left-3 top-3 text-green-400"></i>
+                  <i class="pi pi-envelope absolute left-3 top-3 text-blue-400"></i>
                   <input 
                     id="email"
                     v-model="profileForm.email"
                     type="email" 
-                    class="form-input pl-10 bg-gray-800 border-gray-700 text-white focus:border-green-500 focus:ring focus:ring-green-500/30 rounded-md shadow-md opacity-80"
+                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md opacity-80"
                     placeholder="Your email"
                     disabled
                   />
@@ -97,69 +97,69 @@
               </div>
               
               <div class="form-group animate-fade-in" style="animation-delay: 200ms;">
-                <label for="phone" class="form-label font-medium text-green-200">Phone</label>
+                <label for="phone" class="form-label font-medium text-blue-200">Phone</label>
                 <div class="relative">
-                  <i class="pi pi-phone absolute left-3 top-3 text-green-400"></i>
+                  <i class="pi pi-phone absolute left-3 top-3 text-blue-400"></i>
                   <input 
                     id="phone"
                     v-model="profileForm.phone"
                     type="tel" 
-                    class="form-input pl-10 bg-gray-800 border-gray-700 text-white focus:border-green-500 focus:ring focus:ring-green-500/30 rounded-md shadow-md"
+                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
                     placeholder="Your phone number"
                   />
                 </div>
               </div>
               
               <div class="form-group animate-fade-in" style="animation-delay: 250ms;">
-                <label for="location" class="form-label font-medium text-green-200">Location</label>
+                <label for="location" class="form-label font-medium text-blue-200">Location</label>
                 <div class="relative">
-                  <i class="pi pi-map-marker absolute left-3 top-3 text-green-400"></i>
+                  <i class="pi pi-map-marker absolute left-3 top-3 text-blue-400"></i>
                   <input 
                     id="location"
                     v-model="profileForm.location"
                     type="text" 
-                    class="form-input pl-10 bg-gray-800 border-gray-700 text-white focus:border-green-500 focus:ring focus:ring-green-500/30 rounded-md shadow-md"
+                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
                     placeholder="Your location"
                   />
                 </div>
               </div>
               
               <div class="form-group animate-fade-in" style="animation-delay: 300ms;">
-                <label for="company" class="form-label font-medium text-green-200">Company</label>
+                <label for="company" class="form-label font-medium text-blue-200">Company</label>
                 <div class="relative">
-                  <i class="pi pi-building absolute left-3 top-3 text-green-400"></i>
+                  <i class="pi pi-building absolute left-3 top-3 text-blue-400"></i>
                   <input 
                     id="company"
                     v-model="profileForm.company"
                     type="text" 
-                    class="form-input pl-10 bg-gray-800 border-gray-700 text-white focus:border-green-500 focus:ring focus:ring-green-500/30 rounded-md shadow-md"
+                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
                     placeholder="Your company"
                   />
                 </div>
               </div>
               
               <div class="form-group animate-fade-in" style="animation-delay: 350ms;">
-                <label for="position" class="form-label font-medium text-green-200">Position</label>
+                <label for="position" class="form-label font-medium text-blue-200">Position</label>
                 <div class="relative">
-                  <i class="pi pi-briefcase absolute left-3 top-3 text-green-400"></i>
+                  <i class="pi pi-briefcase absolute left-3 top-3 text-blue-400"></i>
                   <input 
                     id="position"
                     v-model="profileForm.position"
                     type="text" 
-                    class="form-input pl-10 bg-gray-800 border-gray-700 text-white focus:border-green-500 focus:ring focus:ring-green-500/30 rounded-md shadow-md"
+                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
                     placeholder="Your position"
                   />
                 </div>
               </div>
               
               <div class="form-group md:col-span-2 animate-fade-in" style="animation-delay: 400ms;">
-                <label for="bio" class="form-label font-medium text-green-200">Bio</label>
+                <label for="bio" class="form-label font-medium text-blue-200">Bio</label>
                 <div class="relative">
-                  <i class="pi pi-user-edit absolute left-3 top-3 text-green-400"></i>
+                  <i class="pi pi-user-edit absolute left-3 top-3 text-blue-400"></i>
                   <textarea 
                     id="bio"
                     v-model="profileForm.bio"
-                    class="form-textarea pl-10 bg-gray-800 border-gray-700 text-white focus:border-green-500 focus:ring focus:ring-green-500/30 rounded-md shadow-md"
+                    class="form-textarea w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
                     rows="4"
                     placeholder="Tell us about yourself"
                   ></textarea>
@@ -170,7 +170,7 @@
             <div class="mt-8 flex flex-col sm:flex-row items-center justify-between animate-fade-in" style="animation-delay: 450ms;">
               <button 
                 type="submit" 
-                class="btn bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-medium py-2 px-6 rounded-md shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto mb-4 sm:mb-0 focus:outline-none focus:ring-2 focus:ring-green-500/50 hover:scale-105"
+                class="btn bg-gradient-to-r from-[#1e3799] to-[#4a69bd] hover:from-[#0c2461] hover:to-[#1e3799] text-white font-medium py-2 px-6 rounded-md shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto mb-4 sm:mb-0 focus:outline-none focus:ring-2 focus:ring-[#4a69bd]/50 hover:scale-105"
                 :disabled="isLoading"
               >
                 <i v-if="isLoading" class="pi pi-spin pi-spinner mr-2"></i>
@@ -182,20 +182,16 @@
                 <span v-if="saveSuccess" class="text-green-400 flex items-center animate-pulse">
                   <i class="pi pi-check-circle mr-1"></i> Profile updated successfully
                 </span>
-                
-                <span v-if="saveError" class="text-red-400 flex items-center">
-                  <i class="pi pi-times-circle mr-1"></i> {{ saveError }}
-                </span>
               </div>
             </div>
           </form>
         </div>
       </div>
       
-      <div class="bg-gray-900 rounded-lg shadow-xl overflow-hidden animate-slide-up" style="animation-delay: 200ms;">
-        <div class="p-6 border-b border-gray-700 bg-gradient-to-r from-green-900/80 to-teal-900/80">
+      <div class="bg-[#18181c] rounded-lg shadow-xl overflow-hidden animate-slide-up" style="animation-delay: 200ms;">
+        <div class="p-6 border-b border-[#2d2d35] bg-gradient-to-r from-[#0c2461]/90 to-[#1e3799]/90">
           <h2 class="text-xl font-bold flex items-center text-white">
-            <i class="pi pi-shield mr-2 text-green-400"></i>
+            <i class="pi pi-shield mr-2 text-blue-400"></i>
             Account Security
           </h2>
         </div>
@@ -208,14 +204,14 @@
             </div>
             <button 
               @click="togglePasswordForm" 
-              class="btn mt-3 sm:mt-0 border border-green-500 text-green-300 hover:bg-green-800/50 font-medium py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all duration-300 hover:scale-105"
+              class="btn mt-3 sm:mt-0 border border-[#4a69bd] text-blue-300 hover:bg-[#0c2461]/50 font-medium py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-[#4a69bd]/50 transition-all duration-300 hover:scale-105"
             >
               <i class="pi pi-lock mr-2"></i>
               {{ showPasswordForm ? 'Cancel' : 'Change Password' }}
             </button>
           </div>
           
-          <div v-if="showPasswordForm" class="mt-6 p-6 border border-gray-700 rounded-lg bg-gray-800/50 animate-fade-in">
+          <div v-if="showPasswordForm" class="mt-6 p-6 border border-[#2d2d35] rounded-lg bg-[#1e1e24]/50 animate-fade-in">
             <ChangePasswordForm />
           </div>
         </div>
@@ -272,7 +268,6 @@ const authStore = useAuthStore()
 const message = useMessage()
 const isLoading = ref(false)
 const saveSuccess = ref(false)
-const saveError = ref<string | null>(null)
 
 interface ProfileFormData {
   id?: number | string
@@ -324,7 +319,6 @@ const handleImageChange = (event: Event) => {
 const saveProfile = async () => {
   isLoading.value = true
   saveSuccess.value = false
-  saveError.value = null
   
   try {
     if (profileImageFile.value) {
@@ -345,8 +339,7 @@ const saveProfile = async () => {
       saveSuccess.value = false
     }, 3000)
   } catch (error: any) {
-    handleApiError(error, 'Profile Update Failed')
-    saveError.value = error.message || 'Failed to update profile'
+    console.error('Profile Update Failed:', error)
   } finally {
     isLoading.value = false
   }
@@ -371,8 +364,7 @@ const fetchUserProfile = async () => {
       position: userProfile.position || ''
     }
   } catch (error: any) {
-    handleApiError(error, 'Failed to Load Profile')
-    saveError.value = error.message || 'Failed to fetch user profile'
+    console.error('Failed to Load Profile:', error)
   } finally {
     isLoading.value = false
   }

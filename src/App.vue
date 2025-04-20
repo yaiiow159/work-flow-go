@@ -1,56 +1,29 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import { onMounted } from 'vue'
 import {
-  darkTheme,
-  lightTheme,
   NConfigProvider,
   NDialogProvider,
   NLoadingBarProvider,
   NMessageProvider,
   NNotificationProvider
 } from 'naive-ui'
-import {RouterView} from 'vue-router'
+import { RouterView } from 'vue-router'
+import { useThemeStore } from './stores/theme'
+import { useAuthStore } from './stores/auth'
 
-const isDarkMode = ref(false)
+const themeStore = useThemeStore()
+
+// Keep authStore for authentication functionality even though TypeScript thinks it's unused
+// @ts-ignore
+const authStore = useAuthStore()
 
 onMounted(() => {
-  const savedDarkMode = localStorage.getItem('darkMode')
-  if (savedDarkMode !== null) {
-    isDarkMode.value = savedDarkMode === 'true'
-  } else {
-    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-    localStorage.setItem('darkMode', isDarkMode.value.toString())
-  }
-  
-  applyThemeClass(isDarkMode.value)
-})
-
-window.addEventListener('themeChange', ((event: CustomEvent) => {
-  isDarkMode.value = event.detail.isDark
-  applyThemeClass(isDarkMode.value)
-}) as EventListener)
-
-watch(isDarkMode, (newValue) => {
-  applyThemeClass(newValue)
-})
-
-const applyThemeClass = (isDark: boolean) => {
-  if (isDark) {
-    document.documentElement.classList.add('dark-theme')
-    document.documentElement.classList.remove('light-theme')
-  } else {
-    document.documentElement.classList.add('light-theme')
-    document.documentElement.classList.remove('dark-theme')
-  }
-}
-
-const theme = computed(() => {
-  return isDarkMode.value ? darkTheme : lightTheme
+  themeStore.initTheme()
 })
 </script>
 
 <template>
-  <n-config-provider :theme="theme">
+  <n-config-provider :theme="themeStore.theme" :theme-overrides="themeStore.themeOverrides">
     <n-loading-bar-provider>
       <n-dialog-provider>
         <n-notification-provider>

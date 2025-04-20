@@ -170,7 +170,7 @@ const handleUpload = (options: any) => {
       onFinish()
     })
     .catch(error => {
-      handleApiError(error, 'Upload Failed')
+      console.error('Upload Failed:', error)
       onFinish()
     })
 }
@@ -198,11 +198,7 @@ const saveInterview = (e: Event) => {
   
   formRef.value?.validate(async (errors: any) => {
     if (errors) {
-      dialog.error({
-        title: 'Form Error',
-        content: 'Please fix the form errors before saving',
-        positiveText: 'OK'
-      })
+      console.error('Form Error:', errors)
       return
     }
     
@@ -231,14 +227,10 @@ const saveInterview = (e: Event) => {
         message.success(`Interview ${isEditMode.value ? 'updated' : 'created'} successfully`)
         router.push('/interviews')
       } else if (interviewStore.error) {
-        dialog.error({
-          title: `Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview`,
-          content: interviewStore.error,
-          positiveText: 'OK'
-        })
+        console.error(`Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview:`, interviewStore.error)
       }
     } catch (err) {
-      handleApiError(err, `Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview`)
+      console.error(`Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview:`, err)
     } finally {
       isSaving.value = false
     }
@@ -271,15 +263,11 @@ onMounted(async () => {
           timeValue.value = date.getTime()
         }
       } else {
-        dialog.error({
-          title: 'Not Found',
-          content: 'Interview not found',
-          positiveText: 'OK'
-        })
+        console.error('Not Found:', 'Interview not found')
         router.push('/interviews')
       }
     } catch (err) {
-      handleApiError(err, 'Failed to Load Interview')
+      console.error('Failed to Load Interview:', err)
     } finally {
       isLoading.value = false
     }

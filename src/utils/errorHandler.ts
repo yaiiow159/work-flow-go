@@ -1,11 +1,8 @@
-import { createDiscreteApi } from 'naive-ui'
-
-const { dialog } = createDiscreteApi(['dialog'])
 
 /**
- * Handles API errors by displaying appropriate UI feedback
+ * Handles API errors by logging them to the console
  * @param error The error object from axios
- * @param title Optional custom title for the error dialog
+ * @param title Optional context for the error
  */
 export const handleApiError = (error: any, title = 'Error'): void => {
   let errorMessage = 'An unexpected error occurred'
@@ -40,11 +37,5 @@ export const handleApiError = (error: any, title = 'Error'): void => {
     errorMessage = error.message
   }
   
-  dialog.error({
-    title,
-    content: errorMessage,
-    positiveText: 'OK'
-  })
-  
-  console.error('API Error:', error)
+  console.error(`[${title}]`, errorMessage, error)
 }

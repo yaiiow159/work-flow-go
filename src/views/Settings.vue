@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import MainLayout from '../components/layout/MainLayout.vue'
 import { userSettingsApi } from '../services/api'
 import type { UserSettingsRequest } from '../types'
+import { useThemeStore } from '../stores/theme'
 import { 
   NCard, 
   NSpace, 
@@ -30,14 +31,13 @@ import {
   CalendarOutline,
   PersonOutline
 } from '@vicons/ionicons5'
-import { handleApiError } from '../utils/errorHandler'
 
 const message = useMessage()
 const isLoading = ref(true)
+const themeStore = useThemeStore()
 
 interface UserSettings {
   theme: {
-    darkMode: boolean
     primaryColor: string
   }
   notifications: {
@@ -57,7 +57,6 @@ interface UserSettings {
 
 const userSettings = ref<UserSettings>({
   theme: {
-    darkMode: true,
     primaryColor: '#6366F1'
   },
   notifications: {
@@ -94,18 +93,17 @@ onMounted(async () => {
     const data = await userSettingsApi.get()
     
     userSettings.value = {
-      theme: data.preferences?.theme || {
-        darkMode: true,
-        primaryColor: '#6366F1'
+      theme: {
+        primaryColor: themeStore.primaryColor
       },
       notifications: data.preferences?.notifications || {
         enabled: true,
         emailNotifications: true,
         reminderTime: '1day'
       },
-      display: data.preferences?.display || {
-        defaultView: 'calendar',
-        compactMode: false
+      display: {
+        defaultView: themeStore.defaultView,
+        compactMode: themeStore.compactMode
       },
       profile: {
         name: data.name || 'User',
@@ -113,7 +111,7 @@ onMounted(async () => {
       }
     }
   } catch (error) {
-    handleApiError(error, 'Failed to Load Settings')
+    console.error('Failed to Load Settings:', error)
   } finally {
     isLoading.value = false
   }
@@ -123,11 +121,18 @@ const saveSettings = async () => {
   try {
     isLoading.value = true
     
+    themeStore.setPrimaryColor(userSettings.value.theme.primaryColor)
+    themeStore.setCompactMode(userSettings.value.display.compactMode)
+    themeStore.setDefaultView(userSettings.value.display.defaultView)
+    
     const settingsRequest: UserSettingsRequest = {
       name: userSettings.value.profile.name,
       email: userSettings.value.profile.email,
       preferences: {
-        theme: userSettings.value.theme,
+        theme: {
+          darkMode: themeStore.isDarkMode,
+          primaryColor: userSettings.value.theme.primaryColor
+        },
         notifications: userSettings.value.notifications,
         display: userSettings.value.display
       }
@@ -136,7 +141,7 @@ const saveSettings = async () => {
     await userSettingsApi.update(settingsRequest)
     message.success('Settings saved successfully')
   } catch (error) {
-    handleApiError(error, 'Failed to Save Settings')
+    console.error('Failed to Save Settings:', error)
   } finally {
     isLoading.value = false
   }
@@ -148,9 +153,8 @@ const resetSettings = async () => {
     const data = await userSettingsApi.resetSettings()
     
     userSettings.value = {
-      theme: data.preferences?.theme || {
-        darkMode: true,
-        primaryColor: '#6366F1'
+      theme: {
+        primaryColor: data.preferences?.theme?.primaryColor || '#6366F1'
       },
       notifications: data.preferences?.notifications || {
         enabled: true,
@@ -169,7 +173,7 @@ const resetSettings = async () => {
     
     message.info('Settings reset to defaults')
   } catch (error) {
-    handleApiError(error, 'Failed to Reset Settings')
+    console.error('Failed to Reset Settings:', error)
   } finally {
     isLoading.value = false
   }
@@ -190,7 +194,7 @@ const exportData = async () => {
     
     message.success('Data exported successfully')
   } catch (error) {
-    handleApiError(error, 'Failed to Export Data')
+    console.error('Failed to Export Data:', error)
   } finally {
     isLoading.value = false
   }
@@ -202,20 +206,16 @@ const exportData = async () => {
   <MainLayout>
     <div class="page-container">
       <n-space vertical size="large">
-        <!-- Header -->
         <div>
           <h1 style="margin-bottom: 4px;">Settings</h1>
           <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">Customize your interview tracking experience</p>
         </div>
 
-        <!-- Loading State -->
         <div v-if="isLoading" style="display: flex; justify-content: center; padding: 40px;">
           <n-spin size="large" />
         </div>
 
-        <!-- Settings Sections -->
         <n-grid v-else cols="1 l:4" :x-gap="24" :y-gap="24">
-          <!-- Sidebar Navigation -->
           <n-gi span="1">
             <n-card>
               <n-space vertical>
@@ -248,7 +248,7 @@ const exportData = async () => {
 
                 <n-form>
                   <n-form-item label="Dark Mode">
-                    <n-switch v-model:value="userSettings.theme.darkMode" />
+                    <n-switch v-model:value="themeStore.isDarkMode" @update:value="themeStore.toggleDarkMode" />
                   </n-form-item>
 
                   <n-form-item label="Primary Color">
@@ -257,7 +257,6 @@ const exportData = async () => {
                 </n-form>
               </n-card>
 
-              <!-- Notification Settings -->
               <n-card title="Notification Settings" id="notifications">
                 <template #header-extra>
                   <n-icon><NotificationsOutline /></n-icon>
@@ -285,7 +284,6 @@ const exportData = async () => {
                 </n-form>
               </n-card>
 
-              <!-- Display Settings -->
               <n-card title="Display Settings" id="display">
                 <template #header-extra>
                   <n-icon><CalendarOutline /></n-icon>

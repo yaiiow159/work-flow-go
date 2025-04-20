@@ -63,11 +63,11 @@ onMounted(async () => {
 })
 
 const fetchDocuments = async () => {
-  isLoading.value = true
   try {
+    isLoading.value = true
     documents.value = await documentsApi.getAll()
   } catch (error) {
-    handleApiError(error, 'Failed to Load Documents')
+    console.error('Failed to Load Documents:', error)
   } finally {
     isLoading.value = false
   }
@@ -84,23 +84,14 @@ const formatDate = (dateString: string) => {
 
 const handleUpload = async () => {
   if (!newDocument.value.name || uploadFileList.value.length === 0) {
-    dialog.error({
-      title: 'Form Error',
-      content: 'Please provide a name and select a file',
-      positiveText: 'OK'
-    })
+    console.error('Please provide a name and select a file')
     return
   }
   
-  isLoading.value = true
   try {
     const file = uploadFileList.value[0].file
     if (!file) {
-      dialog.error({
-        title: 'Upload Error',
-        content: 'No file selected',
-        positiveText: 'OK'
-      })
+      console.error('No file selected')
       return
     }
     
@@ -114,9 +105,7 @@ const handleUpload = async () => {
     message.success('Document uploaded successfully')
     resetUploadForm()
   } catch (error) {
-    handleApiError(error, 'Upload Failed')
-  } finally {
-    isLoading.value = false
+    console.error('Upload Failed:', error)
   }
 }
 
@@ -136,15 +125,10 @@ const openEditModal = (doc: Document) => {
 
 const saveEditedDocument = async () => {
   if (!editingDocument.value || !editingDocument.value.name) {
-    dialog.error({
-      title: 'Form Error',
-      content: 'Please provide a name',
-      positiveText: 'OK'
-    })
+    console.error('Please provide a name')
     return
   }
   
-  isLoading.value = true
   try {
     const updatedDoc = await documentsApi.update(
       editingDocument.value.id,
@@ -161,22 +145,17 @@ const saveEditedDocument = async () => {
       showEditModal.value = false
     }
   } catch (error) {
-    handleApiError(error, 'Update Failed')
-  } finally {
-    isLoading.value = false
+    console.error('Update Failed:', error)
   }
 }
 
 const deleteDocument = async (id: string) => {
-  isLoading.value = true
   try {
     await documentsApi.delete(id)
     documents.value = documents.value.filter(doc => doc.id !== id)
     message.success('Document deleted successfully')
   } catch (error) {
-    handleApiError(error, 'Delete Failed')
-  } finally {
-    isLoading.value = false
+    console.error('Delete Failed:', error)
   }
 }
 
@@ -195,21 +174,19 @@ const downloadDocument = (doc: Document) => {
     
     message.success('Document download started')
   } catch (error) {
-    handleApiError(error, 'Download Failed')
+    console.error('Download Failed:', error)
   }
 }
 
 const viewDocument = (doc: Document) => {
   try {
-    // Get the view URL from the API
     const viewUrl = documentsApi.getViewUrl(doc.id)
     
-    // Open in a new tab
     window.open(viewUrl, '_blank')
     
     message.success('Document opened for viewing')
   } catch (error) {
-    handleApiError(error, 'View Failed')
+    console.error('View Failed:', error)
   }
 }
 

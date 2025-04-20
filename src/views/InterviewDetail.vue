@@ -88,14 +88,10 @@ const deleteInterview = async () => {
       message.success('Interview deleted successfully')
       router.push('/interviews')
     } else if (interviewStore.error) {
-      dialog.error({
-        title: 'Delete Failed',
-        content: interviewStore.error,
-        positiveText: 'OK'
-      })
+      console.error('Delete Failed:', interviewStore.error)
     }
   } catch (err) {
-    handleApiError(err, 'Delete Failed')
+    console.error('Delete Failed:', err)
   }
 }
 
@@ -108,14 +104,10 @@ const updateStatus = async (newStatus: string) => {
       interview.value = updatedInterview
       message.success('Status updated successfully')
     } else if (interviewStore.error) {
-      dialog.error({
-        title: 'Status Update Failed',
-        content: interviewStore.error,
-        positiveText: 'OK'
-      })
+      console.error('Status Update Failed:', interviewStore.error)
     }
   } catch (err) {
-    handleApiError(err, 'Status Update Failed')
+    console.error('Status Update Failed:', err)
   }
 }
 
@@ -125,17 +117,11 @@ onMounted(async () => {
     if (fetchedInterview) {
       interview.value = fetchedInterview
     } else {
-      dialog.error({
-        title: 'Not Found',
-        content: 'Interview not found',
-        positiveText: 'OK',
-        onPositiveClick: () => {
-          router.push('/interviews')
-        }
-      })
+      console.error('Failed to Load Interview:', 'Interview not found')
+      router.push('/interviews')
     }
   } catch (err) {
-    handleApiError(err, 'Failed to Load Interview')
+    console.error('Failed to Load Interview:', err)
     router.push('/interviews')
   } finally {
     isLoading.value = false

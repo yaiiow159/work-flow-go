@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationsStore } from '../../stores/notifications'
+import { useThemeStore } from '../../stores/theme'
 import NotificationItem from '../notifications/NotificationItem.vue'
 
 const emit = defineEmits(['toggle-sidebar'])
 const router = useRouter()
 const authStore = useAuthStore()
 const notificationsStore = useNotificationsStore()
+const themeStore = useThemeStore()
+const userDisplayName = computed(() => authStore.userDisplayName)
 
 const toggleSidebar = () => {
   emit('toggle-sidebar')
@@ -23,57 +26,59 @@ const currentDate = new Date().toLocaleDateString('en-US', {
 
 const showNotifications = ref(false)
 const showUserMenu = ref(false)
-const isDarkMode = ref(false)
 
-onMounted(() => {
-  const savedDarkMode = localStorage.getItem('darkMode')
-  if (savedDarkMode !== null) {
-    isDarkMode.value = savedDarkMode === 'true'
-  } else {
-    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-    localStorage.setItem('darkMode', isDarkMode.value.toString())
+const closeMenus = (event: MouseEvent) => {
+  const notificationMenu = document.getElementById('notification-menu')
+  const userMenu = document.getElementById('user-menu')
+  const notificationButton = document.getElementById('notification-button')
+  const userMenuButton = document.getElementById('user-menu-button')
+  
+  if (notificationMenu && !notificationMenu.contains(event.target as Node) && 
+      notificationButton && !notificationButton.contains(event.target as Node)) {
+    showNotifications.value = false
   }
-})
-
-const toggleNotifications = () => {
-  showNotifications.value = !showNotifications.value
-  if (showNotifications.value) {
+  
+  if (userMenu && !userMenu.contains(event.target as Node) && 
+      userMenuButton && !userMenuButton.contains(event.target as Node)) {
     showUserMenu.value = false
-    notificationsStore.fetchNotifications()
   }
 }
 
-const toggleUserMenu = () => {
+const toggleNotifications = (event: MouseEvent) => {
+  event.stopPropagation()
+  showNotifications.value = !showNotifications.value
+  
+  if (showNotifications.value) {
+    showUserMenu.value = false
+    notificationsStore.fetchNotifications().catch(e => {
+      console.error('fetchNotifications error', e)
+    })
+  }
+}
+
+const toggleUserMenu = (event: MouseEvent) => {
+  event.stopPropagation()
   showUserMenu.value = !showUserMenu.value
+  
   if (showUserMenu.value) {
     showNotifications.value = false
   }
 }
 
-const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value
-  localStorage.setItem('darkMode', isDarkMode.value.toString())
-  
-  window.dispatchEvent(new CustomEvent('themeChange', {
-    detail: { isDark: isDarkMode.value } 
-  }))
+const handleMarkAsRead = (id: string) => {
+  notificationsStore.markAsRead(id)
 }
 
-const handleMarkAsRead = async (id: string) => {
-  await notificationsStore.markAsRead(id)
+const handleMarkAllAsRead = () => {
+  notificationsStore.markAllAsRead()
 }
 
-const handleMarkAllAsRead = async () => {
-  await notificationsStore.markAllAsRead()
+const handleDeleteNotification = (id: string) => {
+  notificationsStore.deleteNotification(id)
 }
 
-const handleDeleteNotification = async (id: string) => {
-  await notificationsStore.deleteNotification(id)
-}
-
-const handleLogout = async () => {
-  await authStore.logout()
-  router.push('/login')
+const handleLogout = () => {
+  authStore.logout()
 }
 
 const goToSettings = () => {
@@ -84,8 +89,10 @@ const goToProfile = () => {
   router.push('/profile')
 }
 
+const userPhotoURL = computed(() => authStore.user?.photoURL)
+
 const userInitials = computed(() => {
-  const name = authStore.userDisplayName
+  const name = userDisplayName.value
   if (!name) return 'U'
   
   const parts = name.split(' ')
@@ -95,76 +102,74 @@ const userInitials = computed(() => {
   return name.substring(0, 2).toUpperCase()
 })
 
-const userPhotoURL = computed(() => authStore.user?.photoURL)
-
-const isGoogleUser = computed(() => authStore.user?.authProvider === 'google')
-
-const displayName = computed(() => {
-  if (isGoogleUser.value) {
-    return authStore.user?.displayName || authStore.user?.email || 'Google User'
-  }
-  return authStore.userDisplayName
+onMounted(() => {
+  document.addEventListener('click', closeMenus)
+  notificationsStore.fetchNotifications().catch(e => {
+    console.error('Failed to fetch notifications:', e)
+  })
 })
 
-onMounted(async () => {
-  await notificationsStore.fetchNotifications()
+onUnmounted(() => {
+  document.removeEventListener('click', closeMenus)
 })
 </script>
 
 <template>
-  <header class="bg-surface border-b border-surface-light px-4 py-3">
+  <header class="bg-[#18181c] border-b border-[#2d2d35] px-4 py-3">
     <div class="flex justify-between items-center">
       <div class="flex items-center">
         <button 
           @click="toggleSidebar" 
-          class="p-2 rounded-md text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+          class="p-2 rounded-md text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200"
         >
-          <i class="pi pi-bars text-xl"></i>
+          <i class="pi pi-bars" style="font-size: 1.1rem;"></i>
         </button>
         
         <div class="ml-4 hidden md:block">
-          <h2 class="text-lg font-medium">{{ currentDate }}</h2>
+          <h2 class="text-lg font-medium text-white">{{ currentDate }}</h2>
         </div>
       </div>
       
       <div class="flex items-center space-x-4">
         <router-link
           to="/interviews/new" 
-          class="btn btn-primary hidden sm:flex items-center"
+          class="btn btn-primary hidden sm:flex items-center px-3 py-1.5 rounded-md bg-[#4a69bd] hover:bg-[#1e3799] text-white transition-colors duration-200"
         >
-          <i class="pi pi-plus mr-2"></i>
+          <i class="pi pi-plus mr-2" style="font-size: 0.9rem;"></i>
           <span>New Interview</span>
         </router-link>
         
-        <!-- Dark Mode Toggle Button -->
-        <button 
-          @click="toggleDarkMode" 
-          class="p-2 rounded-full text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+        <button
+          @click="themeStore.toggleDarkMode"
+          class="p-2 rounded-full text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200"
           aria-label="Toggle dark mode"
         >
-          <i v-if="isDarkMode" class="pi pi-sun text-xl"></i>
-          <i v-else class="pi pi-moon text-xl"></i>
+          <i v-if="themeStore.isDarkMode" class="pi pi-sun" style="font-size: 1.1rem;"></i>
+          <i v-else class="pi pi-moon" style="font-size: 1.1rem;"></i>
         </button>
         
         <div class="relative">
           <button 
-            @click="toggleNotifications" 
-            class="p-2 rounded-full text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200 relative"
+            id="notification-button"
+            @click="toggleNotifications($event)" 
+            class="p-2 rounded-full text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200 relative"
+            aria-label="Toggle notifications"
           >
-            <i class="pi pi-bell text-xl"></i>
+            <i class="pi pi-bell" style="font-size: 1.1rem;"></i>
             <span 
               v-if="notificationsStore.unreadCount > 0" 
-              class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"
+              class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"
             ></span>
           </button>
           
           <div
-            v-if="showNotifications" 
-            class="absolute right-0 mt-2 w-80 bg-surface rounded-card shadow-card z-10"
+            id="notification-menu"
+            v-show="showNotifications" 
+            class="absolute right-0 mt-2 w-80 bg-[#18181c] rounded-md shadow-lg z-10 overflow-hidden border border-[#2d2d35]"
           >
-            <div class="p-3 border-b border-surface-light flex justify-between items-center">
-              <h3 class="font-medium">Notifications</h3>
-              <span v-if="notificationsStore.unreadCount > 0" class="text-xs bg-primary text-white px-2 py-0.5 rounded-full">
+            <div class="p-3 border-b border-[#2d2d35] flex justify-between items-center">
+              <h3 class="font-medium text-white">Notifications</h3>
+              <span v-if="notificationsStore.unreadCount > 0" class="text-xs bg-[#4a69bd] text-white px-2 py-0.5 rounded-full">
                 {{ notificationsStore.unreadCount }}
               </span>
             </div>
@@ -179,15 +184,15 @@ onMounted(async () => {
                   @delete="handleDeleteNotification"
                 />
               </template>
-              <div v-else class="p-4 text-center text-text-muted">
+              <div v-else class="p-4 text-center text-gray-400">
                 No notifications
               </div>
             </div>
             
-            <div v-if="notificationsStore.notifications.length > 0" class="p-2 border-t border-surface-light text-center">
+            <div v-if="notificationsStore.notifications.length > 0" class="p-2 border-t border-[#2d2d35] text-center">
               <button 
                 @click="handleMarkAllAsRead"
-                class="text-sm text-primary hover:text-primary-hover"
+                class="text-sm text-[#4a69bd] hover:text-[#6a89cc]"
               >
                 Mark all as read
               </button>
@@ -197,52 +202,53 @@ onMounted(async () => {
         
         <div class="relative">
           <button 
-            @click="toggleUserMenu" 
+            id="user-menu-button"
+            @click="toggleUserMenu($event)" 
             class="flex items-center space-x-2"
           >
-            <div v-if="userPhotoURL" class="w-8 h-8 rounded-full overflow-hidden">
+            <div v-if="userPhotoURL" class="w-8 h-8 rounded-full overflow-hidden border border-[#2d2d35]">
               <img :src="userPhotoURL" alt="User" class="w-full h-full object-cover" />
             </div>
-            <div v-else class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+            <div v-else class="w-8 h-8 rounded-full bg-[#4a69bd] flex items-center justify-center text-white border border-[#2d2d35]">
               <span class="text-sm font-medium">{{ userInitials }}</span>
             </div>
           </button>
           
           <div
-            v-if="showUserMenu" 
-            class="absolute right-0 mt-2 w-48 bg-surface rounded-card shadow-card z-10"
+            id="user-menu"
+            v-show="showUserMenu" 
+            class="absolute right-0 mt-2 w-48 bg-[#18181c] rounded-md shadow-lg z-10 border border-[#2d2d35]"
           >
-            <div class="p-3 border-b border-surface-light">
-              <h3 class="font-medium">{{ displayName }}</h3>
-              <p class="text-xs text-text-muted">
+            <div class="p-3 border-b border-[#2d2d35]">
+              <h3 class="font-medium text-white">{{ userDisplayName }}</h3>
+              <p class="text-xs text-gray-400">
                 {{ authStore.user?.email }}
-                <span v-if="isGoogleUser" class="ml-1 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">Google</span>
               </p>
             </div>
             
             <div class="py-1">
               <button 
                 @click="goToProfile"
-                class="w-full px-4 py-2 text-left text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+                class="w-full text-left px-4 py-2 hover:bg-[#2d2d35] text-gray-300"
               >
-                <i class="pi pi-user mr-2"></i>
-                <span>Profile</span>
+                <i class="pi pi-user mr-2" style="font-size: 0.9rem;"></i>
+                Profile
               </button>
               
               <button 
                 @click="goToSettings"
-                class="w-full px-4 py-2 text-left text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+                class="w-full text-left px-4 py-2 hover:bg-[#2d2d35] text-gray-300"
               >
-                <i class="pi pi-cog mr-2"></i>
-                <span>Settings</span>
+                <i class="pi pi-cog mr-2" style="font-size: 0.9rem;"></i>
+                Settings
               </button>
               
               <button 
                 @click="handleLogout"
-                class="w-full px-4 py-2 text-left text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+                class="w-full text-left px-4 py-2 hover:bg-[#2d2d35] text-red-400"
               >
-                <i class="pi pi-sign-out mr-2"></i>
-                <span>Logout</span>
+                <i class="pi pi-sign-out mr-2" style="font-size: 0.9rem;"></i>
+                Logout
               </button>
             </div>
           </div>

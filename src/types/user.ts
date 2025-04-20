@@ -7,10 +7,6 @@ export interface User {
   token: string;
 }
 
-export interface UserInfo {
-
-}
-
 export interface AuthResponse {
   user: User;
   token: string;
@@ -22,11 +18,3 @@ export interface RegisterResponse {
   message: string;
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData extends LoginCredentials {
-  displayName: string;
-}

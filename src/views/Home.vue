@@ -174,7 +174,6 @@ onBeforeUnmount(() => {
   timerService.clearAllReminders()
 })
 
-// Get typed upcoming interviews with remaining time
 const upcomingWithRemaining = computed(() => {
   return timerService.upcomingWithRemaining.value || []
 })
