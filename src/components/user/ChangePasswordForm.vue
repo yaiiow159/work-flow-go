@@ -67,14 +67,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useMessage, useDialog } from 'naive-ui'
+import { useDialog } from 'naive-ui'
 import type { FormInst, FormRules } from 'naive-ui'
 import { userApi } from '../../services/api'
 import type { PasswordChangeRequest } from '../../types'
 import { handleApiError } from '../../utils/errorHandler'
 
 const formRef = ref<FormInst | null>(null)
-const message = useMessage()
 const dialog = useDialog()
 const isSubmitting = ref(false)
 const showSuccessModal = ref(false)
