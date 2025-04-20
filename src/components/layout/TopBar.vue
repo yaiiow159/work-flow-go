@@ -23,6 +23,17 @@ const currentDate = new Date().toLocaleDateString('en-US', {
 
 const showNotifications = ref(false)
 const showUserMenu = ref(false)
+const isDarkMode = ref(false)
+
+onMounted(() => {
+  const savedDarkMode = localStorage.getItem('darkMode')
+  if (savedDarkMode !== null) {
+    isDarkMode.value = savedDarkMode === 'true'
+  } else {
+    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+    localStorage.setItem('darkMode', isDarkMode.value.toString())
+  }
+})
 
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value
@@ -37,6 +48,15 @@ const toggleUserMenu = () => {
   if (showUserMenu.value) {
     showNotifications.value = false
   }
+}
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value
+  localStorage.setItem('darkMode', isDarkMode.value.toString())
+  
+  window.dispatchEvent(new CustomEvent('themeChange', {
+    detail: { isDark: isDarkMode.value } 
+  }))
 }
 
 const handleMarkAsRead = async (id: string) => {
@@ -77,6 +97,15 @@ const userInitials = computed(() => {
 
 const userPhotoURL = computed(() => authStore.user?.photoURL)
 
+const isGoogleUser = computed(() => authStore.user?.authProvider === 'google')
+
+const displayName = computed(() => {
+  if (isGoogleUser.value) {
+    return authStore.user?.displayName || authStore.user?.email || 'Google User'
+  }
+  return authStore.userDisplayName
+})
+
 onMounted(async () => {
   await notificationsStore.fetchNotifications()
 })
@@ -106,6 +135,16 @@ onMounted(async () => {
           <i class="pi pi-plus mr-2"></i>
           <span>New Interview</span>
         </router-link>
+        
+        <!-- Dark Mode Toggle Button -->
+        <button 
+          @click="toggleDarkMode" 
+          class="p-2 rounded-full text-text-secondary hover:bg-background-lighter hover:text-text transition-colors duration-200"
+          aria-label="Toggle dark mode"
+        >
+          <i v-if="isDarkMode" class="pi pi-sun text-xl"></i>
+          <i v-else class="pi pi-moon text-xl"></i>
+        </button>
         
         <div class="relative">
           <button 
@@ -174,8 +213,11 @@ onMounted(async () => {
             class="absolute right-0 mt-2 w-48 bg-surface rounded-card shadow-card z-10"
           >
             <div class="p-3 border-b border-surface-light">
-              <h3 class="font-medium">{{ authStore.userDisplayName }}</h3>
-              <p class="text-xs text-text-muted">{{ authStore.user?.email }}</p>
+              <h3 class="font-medium">{{ displayName }}</h3>
+              <p class="text-xs text-text-muted">
+                {{ authStore.user?.email }}
+                <span v-if="isGoogleUser" class="ml-1 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">Google</span>
+              </p>
             </div>
             
             <div class="py-1">

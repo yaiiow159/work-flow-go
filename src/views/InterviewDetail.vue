@@ -54,17 +54,14 @@ const isLoading = ref(true)
 const interview = ref<Interview | null>(null)
 const interviewId = computed(() => route.params.id as string)
 
-// Format date for display
 const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'MMMM d, yyyy')
 }
 
-// Format time for display
 const formatTime = (timeString: string) => {
   return timeString
 }
 
-// Get status type for tag color
 const getStatusType = (status: string) => {
   switch (status) {
     case 'scheduled':
@@ -82,7 +79,6 @@ const getStatusType = (status: string) => {
   }
 }
 
-// Delete interview
 const deleteInterview = async () => {
   if (!interview.value) return
   
@@ -103,7 +99,6 @@ const deleteInterview = async () => {
   }
 }
 
-// Update interview status
 const updateStatus = async (newStatus: string) => {
   if (!interview.value) return
   
@@ -124,7 +119,6 @@ const updateStatus = async (newStatus: string) => {
   }
 }
 
-// Fetch interview details
 onMounted(async () => {
   try {
     const fetchedInterview = await interviewStore.getInterviewById(interviewId.value)
@@ -153,7 +147,6 @@ onMounted(async () => {
   <MainLayout>
     <div class="page-container">
       <n-space vertical size="large">
-        <!-- Loading state -->
         <div v-if="isLoading" style="display: flex; justify-content: center; padding: 40px;">
           <n-spin size="large" />
         </div>

@@ -27,6 +27,22 @@ export const useNotificationsStore = defineStore('notifications', () => {
     }
   }
   
+  const createNotification = async (notification: Omit<Notification, 'id'>) => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const newNotification = await notificationsApi.create(notification)
+      notifications.value.unshift(newNotification)
+      return newNotification
+    } catch (err: any) {
+      error.value = err.message || 'Failed to create notification'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+  
   const markAsRead = async (id: string) => {
     try {
       await notificationsApi.markAsRead(id)
@@ -78,6 +94,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     error,
     unreadCount,
     fetchNotifications,
+    createNotification,
     markAsRead,
     markAllAsRead,
     deleteNotification,

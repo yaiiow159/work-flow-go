@@ -146,6 +146,12 @@ export const statisticsApi = {
 }
 
 export const notificationsApi = {
+
+  create: async (notification: Omit<Notification, 'id'>) => {
+    const response = await axiosInstance.post<Notification>('/notifications', notification)
+    return response.data
+  },
+
   getAll: async () => {
     const response = await axiosInstance.get<Notification[]>('/notifications')
     return response.data

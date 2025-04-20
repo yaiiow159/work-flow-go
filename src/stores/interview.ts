@@ -8,7 +8,6 @@ export const useInterviewStore = defineStore('interview', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Computed properties
   const upcomingInterviews = computed(() => {
     return interviews.value
       .filter(interview => interview.status === 'scheduled' || interview.status === 'confirmed')
@@ -37,7 +36,6 @@ export const useInterviewStore = defineStore('interview', () => {
     return result
   })
 
-  // Actions
   async function fetchInterviews() {
     isLoading.value = true
     error.value = null

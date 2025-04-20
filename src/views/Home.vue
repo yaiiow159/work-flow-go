@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, onBeforeUnmount} from 'vue'
 import {useRouter} from 'vue-router'
 import MainLayout from '../components/layout/MainLayout.vue'
 import {useInterviewStore} from '../stores/interview'
 import {statisticsApi} from '../services/api'
 import {format} from 'date-fns'
+import {useTimerService} from '../services/timerService'
+import {useNotificationService} from '../services/notificationService'
+import type {Interview} from '../types'
 import {
   NButton,
   NCard,
@@ -19,7 +22,9 @@ import {
   NTag,
   NTimeline,
   NTimelineItem,
-  useMessage
+  useMessage,
+  NProgress,
+  NTooltip
 } from 'naive-ui'
 import {
   BusinessOutline,
@@ -27,7 +32,8 @@ import {
   CheckmarkCircleOutline,
   TimeOutline,
   TrendingDownOutline,
-  TrendingUpOutline
+  TrendingUpOutline,
+  NotificationsOutline
 } from '@vicons/ionicons5'
 
 const router = useRouter()
@@ -43,6 +49,10 @@ const statsData = ref({
   byCompany: [],
   byMonth: []
 })
+
+const timerService = useTimerService()
+const notificationService = useNotificationService()
+const remindersEnabled = ref(true)
 
 const stats = computed(() => {
   const interviews = interviewStore.interviews
@@ -65,7 +75,12 @@ const stats = computed(() => {
 })
 
 const formatDate = (dateString: string) => {
-  return format(new Date(dateString), 'MMM dd, yyyy')
+  try {
+    return format(new Date(dateString), 'MMM dd, yyyy')
+  } catch (error) {
+    console.error('Error formatting date:', error)
+    return dateString
+  }
 }
 
 const formatTime = (timeString: string) => {
@@ -89,9 +104,49 @@ const getStatusType = (status: string) => {
   }
 }
 
-// Navigate to a specific route
 const navigateTo = (path: string) => {
-  router.push({ name: path })
+  if (path === 'new-interview') {
+    router.push({ name: 'NewInterview' })
+  } else if (path === 'interviews') {
+    router.push({ name: 'Interviews' })
+  } else {
+    router.push({ name: path })
+  }
+}
+
+const toggleReminders = () => {
+  remindersEnabled.value = !remindersEnabled.value
+  
+  if (remindersEnabled.value) {
+    setupInterviewReminders()
+    message.success('Interview reminders enabled')
+  } else {
+    timerService.clearAllReminders()
+    message.info('Interview reminders disabled')
+  }
+}
+
+const setupInterviewReminders = () => {
+  if (remindersEnabled.value) {
+    timerService.setupReminders((interview: Interview & { reminderLabel?: string }) => {
+      notificationService.notifyUpcomingInterview(interview)
+    })
+  }
+}
+
+const getCountdownProgress = (minutes: number) => {
+  if (minutes < 0) {
+    return 100
+  }
+  
+  if (minutes < 24 * 60) {
+    return 100 - (minutes / (24 * 60) * 100)
+  }
+  else if (minutes < 7 * 24 * 60) {
+    return 100 - (minutes / (7 * 24 * 60) * 100)
+  }
+  
+  return 5
 }
 
 onMounted(async () => {
@@ -99,6 +154,8 @@ onMounted(async () => {
     isLoading.value = true
 
     await interviewStore.fetchInterviews()
+    
+    setupInterviewReminders()
 
     try {
       statsData.value = await statisticsApi.getInterviewStats()
@@ -112,6 +169,15 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
+
+onBeforeUnmount(() => {
+  timerService.clearAllReminders()
+})
+
+// Get typed upcoming interviews with remaining time
+const upcomingWithRemaining = computed(() => {
+  return timerService.upcomingWithRemaining.value || []
+})
 </script>
 
 <template>
@@ -124,12 +190,29 @@ onMounted(async () => {
             <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">Your interview tracking overview</p>
           </div>
 
-          <n-button type="primary" @click="navigateTo('new-interview')">
-            <template #icon>
-              <n-icon><CalendarOutline /></n-icon>
-            </template>
-            New Interview
-          </n-button>
+          <n-space>
+            <n-tooltip trigger="hover" placement="bottom">
+              <template #trigger>
+                <n-button 
+                  circle 
+                  :type="remindersEnabled ? 'primary' : 'default'" 
+                  @click="toggleReminders"
+                >
+                  <template #icon>
+                    <n-icon><NotificationsOutline /></n-icon>
+                  </template>
+                </n-button>
+              </template>
+              {{ remindersEnabled ? 'Disable reminders' : 'Enable reminders' }}
+            </n-tooltip>
+            
+            <n-button type="primary" @click="navigateTo('new-interview')">
+              <template #icon>
+                <n-icon><CalendarOutline /></n-icon>
+              </template>
+              New Interview
+            </n-button>
+          </n-space>
         </n-space>
 
         <div v-if="isLoading || interviewStore.isLoading" style="display: flex; justify-content: center; padding: 40px;">
@@ -209,7 +292,6 @@ onMounted(async () => {
             </n-gi>
           </n-grid>
 
-          <!-- Upcoming Interviews -->
           <n-card title="Upcoming Interviews">
             <template #header-extra>
               <n-button text @click="navigateTo('interviews')">
@@ -229,7 +311,7 @@ onMounted(async () => {
 
             <n-timeline v-else>
               <n-timeline-item
-                v-for="interview in interviewStore.upcomingInterviews.slice(0, 5)"
+                v-for="interview in upcomingWithRemaining"
                 :key="interview.id"
                 :type="getStatusType(interview.status)"
                 :title="interview.companyName"
@@ -252,6 +334,22 @@ onMounted(async () => {
                       <span>{{ formatTime(interview.time) }}</span>
                       <span>{{ interview.type === 'onsite' ? 'On-site' : interview.type === 'remote' ? 'Remote' : 'Phone' }}</span>
                     </n-space>
+                  </div>
+                  
+                  <div class="countdown-container">
+                    <n-space align="center">
+                      <n-icon :color="interview.minutes < 60 ? '#d03050' : interview.minutes < 24 * 60 ? '#f0a020' : '#18a058'">
+                        <TimeOutline />
+                      </n-icon>
+                      <span>{{ interview.timeRemaining }}</span>
+                    </n-space>
+                    <n-progress 
+                      type="line" 
+                      :percentage="getCountdownProgress(interview.minutes)" 
+                      :color="interview.minutes < 60 ? '#d03050' : interview.minutes < 24 * 60 ? '#f0a020' : '#18a058'"
+                      :height="8"
+                      :border-radius="4"
+                    />
                   </div>
 
                   <div>
@@ -318,3 +416,10 @@ onMounted(async () => {
     </div>
   </MainLayout>
 </template>
+
+<style scoped>
+.countdown-container {
+  margin: 8px 0;
+  width: 100%;
+}
+</style>

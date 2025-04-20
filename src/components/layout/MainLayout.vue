@@ -1,46 +1,57 @@
 <script setup lang="ts">
-import { ref, h, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import {h, onMounted, ref, watch} from 'vue'
+import {useRouter} from 'vue-router'
 import SideNavigation from './SideNavigation.vue'
-import { 
-  NLayout, 
-  NLayoutHeader, 
-  NLayoutSider, 
-  NLayoutContent,
-  NButton,
-  NIcon,
-  NSpace,
-  NDropdown,
+import {
   NAvatar,
+  NBadge,
+  NButton,
   NDrawer,
   NDrawerContent,
-  NBadge,
-  NTooltip,
+  NDropdown,
+  NGradientText,
+  NIcon,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
+  NLayoutSider,
+  NSpace,
   NSwitch,
-  NGradientText
+  NTooltip
 } from 'naive-ui'
 import {
+  LogOutOutline,
   MenuOutline,
+  MoonOutline,
   NotificationsOutline,
   SettingsOutline,
-  LogOutOutline,
-  MoonOutline,
   SunnyOutline
 } from '@vicons/ionicons5'
-import { useAuthStore } from '../../stores/auth'
+import {useAuthStore} from '../../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const showDrawer = ref(false)
-const isDarkMode = ref(true)
+const isDarkMode = ref(false)
 
-// Initialize dark mode from localStorage on component mount
 onMounted(() => {
   const savedDarkMode = localStorage.getItem('darkMode')
   if (savedDarkMode !== null) {
     isDarkMode.value = savedDarkMode === 'true'
-    applyDarkMode(isDarkMode.value)
+  } else {
+    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+    localStorage.setItem('darkMode', isDarkMode.value.toString())
   }
+  
+  applyDarkMode(isDarkMode.value)
+  
+  window.dispatchEvent(new CustomEvent('themeChange', {
+    detail: { isDark: isDarkMode.value } 
+  }))
+})
+
+watch(isDarkMode, (newValue) => {
+  applyDarkMode(newValue)
 })
 
 const userDropdownOptions = [
@@ -71,8 +82,6 @@ const toggleDarkMode = () => {
   window.dispatchEvent(new CustomEvent('themeChange', {
     detail: { isDark: isDarkMode.value } 
   }))
-  
-  applyDarkMode(isDarkMode.value)
 }
 
 const applyDarkMode = (isDark: boolean) => {
@@ -103,15 +112,16 @@ const applyDarkMode = (isDark: boolean) => {
         <n-space>
           <n-tooltip trigger="hover" placement="bottom">
             <template #trigger>
-              <n-badge dot type="info">
-                <n-button quaternary circle>
-                  <template #icon>
-                    <n-icon><NotificationsOutline /></n-icon>
-                  </template>
-                </n-button>
-              </n-badge>
+              <n-button quaternary circle @click="toggleDarkMode">
+                <template #icon>
+                  <n-icon>
+                    <MoonOutline v-if="!isDarkMode" />
+                    <SunnyOutline v-else />
+                  </n-icon>
+                </template>
+              </n-button>
             </template>
-            Notifications
+            {{ isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}
           </n-tooltip>
         </n-space>
       </n-space>

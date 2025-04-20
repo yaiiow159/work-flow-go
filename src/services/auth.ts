@@ -18,12 +18,31 @@ class AuthService {
     window.location.href = `${apiBaseUrl}/oauth2/authorization/google`
   }
 
-  async register(email: string, password: string, displayName: string): Promise<RegisterResponse> {
+  async requestEmailVerification(email: string): Promise<{ success: boolean, message: string }> {
+    try {
+      const response = await axiosInstance.post(`/auth/verify-email/request`, { email })
+      return response.data
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to send verification code')
+    }
+  }
+
+  async verifyEmailCode(email: string, code: string): Promise<{ success: boolean, message: string }> {
+    try {
+      const response = await axiosInstance.post(`/auth/verify-email/verify`, { email, code })
+      return response.data
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Invalid verification code')
+    }
+  }
+
+  async register(email: string, password: string, displayName: string, verificationCode: string): Promise<RegisterResponse> {
     try {
       const response = await axiosInstance.post(`/auth/register`, {
         email,
         password,
-        displayName
+        displayName,
+        verificationCode
       })
       return response.data
     } catch (error: any) {
