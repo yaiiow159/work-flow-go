@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/auth'
 import { userSettingsApi, userApi } from '../services/api'
 import type { UserSettingsRequest } from '../types'
 import ChangePasswordForm from '../components/user/ChangePasswordForm.vue'
-import { useMessage, useDialog } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 import { handleApiError } from '../utils/errorHandler'
 
 const authStore = useAuthStore()
