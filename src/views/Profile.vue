@@ -256,11 +256,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { userSettingsApi, userApi } from '../services/api'
-import type { UserSettingsRequest } from '../types'
+import { userApi, userSettingsApi } from '../services/api'
+import type { UserProfileRequest } from '../types'
 import ChangePasswordForm from '../components/user/ChangePasswordForm.vue'
 import { useMessage } from 'naive-ui'
-import { handleApiError } from '../utils/errorHandler'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -322,17 +321,20 @@ const saveProfile = async () => {
   
   try {
     if (profileImageFile.value) {
-      await authStore.updateProfileImage(profileImageFile.value)
+      await userSettingsApi.uploadProfileImage(profileImageFile.value)
     }
     
-    const settingsRequest: UserSettingsRequest = {
+    const profileRequest: UserProfileRequest = {
       name: profileForm.value.name,
       email: profileForm.value.email,
-      preferences: {
-      }
+      bio: profileForm.value.bio,
+      phone: profileForm.value.phone,
+      location: profileForm.value.location,
+      company: profileForm.value.company,
+      position: profileForm.value.position
     }
     
-    await userSettingsApi.update(settingsRequest)
+    await userApi.updateUserProfile(profileRequest)
     saveSuccess.value = true
     message.success('Profile updated successfully')
     setTimeout(() => {
@@ -340,6 +342,7 @@ const saveProfile = async () => {
     }, 3000)
   } catch (error: any) {
     console.error('Profile Update Failed:', error)
+    message.error('Failed to update profile')
   } finally {
     isLoading.value = false
   }
@@ -350,13 +353,11 @@ const fetchUserProfile = async () => {
   try {
     const userProfile = await userApi.getUserProfile()
     
-    const userSettings = await userSettingsApi.get()
-    
     profileForm.value = {
-      id: userSettings.id,
-      name: userSettings.name || userProfile.name || '',
-      email: userSettings.email || userProfile.email || '',
-      photoURL: userSettings.photoURL || userProfile.photoURL || '',
+      id: userProfile.id,
+      name: userProfile.name || '',
+      email: userProfile.email || '',
+      photoURL: userProfile.photoURL || '',
       bio: userProfile.bio || '',
       phone: userProfile.phone || '',
       location: userProfile.location || '',
@@ -365,6 +366,7 @@ const fetchUserProfile = async () => {
     }
   } catch (error: any) {
     console.error('Failed to Load Profile:', error)
+    message.error('Failed to load profile')
   } finally {
     isLoading.value = false
   }

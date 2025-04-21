@@ -23,8 +23,7 @@ import {
   NTag,
   NUpload,
   type TagProps,
-  useMessage,
-  useDialog
+  useMessage
 } from 'naive-ui'
 import {
   CloudUploadOutline,
@@ -35,10 +34,9 @@ import {
   TrashOutline
 } from '@vicons/ionicons5'
 import {format} from 'date-fns'
-import { handleApiError } from '../utils/errorHandler'
+import {handleApiError, handleSuccess} from '../utils/errorHandler'
 
 const message = useMessage()
-const dialog = useDialog()
 const isLoading = ref(false)
 const documents = ref<Document[]>([])
 
@@ -67,7 +65,7 @@ const fetchDocuments = async () => {
     isLoading.value = true
     documents.value = await documentsApi.getAll()
   } catch (error) {
-    console.error('Failed to Load Documents:', error)
+    handleApiError(error, 'Failed to Load Documents')
   } finally {
     isLoading.value = false
   }
@@ -84,14 +82,14 @@ const formatDate = (dateString: string) => {
 
 const handleUpload = async () => {
   if (!newDocument.value.name || uploadFileList.value.length === 0) {
-    console.error('Please provide a name and select a file')
+    message.error('Please provide a name and select a file')
     return
   }
   
   try {
     const file = uploadFileList.value[0].file
     if (!file) {
-      console.error('No file selected')
+      message.error('No file selected')
       return
     }
     
@@ -102,10 +100,10 @@ const handleUpload = async () => {
     )
     
     documents.value.unshift(uploadedDoc)
-    message.success('Document uploaded successfully')
+    handleSuccess('Document uploaded successfully')
     resetUploadForm()
   } catch (error) {
-    console.error('Upload Failed:', error)
+    handleApiError(error, 'Upload Failed')
   }
 }
 
@@ -125,7 +123,7 @@ const openEditModal = (doc: Document) => {
 
 const saveEditedDocument = async () => {
   if (!editingDocument.value || !editingDocument.value.name) {
-    console.error('Please provide a name')
+    message.error('Please provide a name')
     return
   }
   
@@ -141,11 +139,11 @@ const saveEditedDocument = async () => {
     const index = documents.value.findIndex(doc => doc.id === editingDocument.value!.id)
     if (index !== -1) {
       documents.value[index] = updatedDoc
-      message.success('Document updated successfully')
+      handleSuccess('Document updated successfully')
       showEditModal.value = false
     }
   } catch (error) {
-    console.error('Update Failed:', error)
+    handleApiError(error, 'Update Failed')
   }
 }
 
@@ -153,15 +151,16 @@ const deleteDocument = async (id: string) => {
   try {
     await documentsApi.delete(id)
     documents.value = documents.value.filter(doc => doc.id !== id)
-    message.success('Document deleted successfully')
+    handleSuccess('Document deleted successfully')
   } catch (error) {
-    console.error('Delete Failed:', error)
+    handleApiError(error, 'Delete Failed')
   }
 }
 
-const downloadDocument = (doc: Document) => {
+const downloadDocument = async (doc: Document) => {
   try {
-    const downloadUrl = documentsApi.getDownloadUrl(doc.id)
+    isLoading.value = true
+    const downloadUrl = await documentsApi.getDownloadUrl(doc.id)
     
     const link = document.createElement('a')
     link.href = downloadUrl
@@ -172,21 +171,26 @@ const downloadDocument = (doc: Document) => {
     link.click()
     document.body.removeChild(link)
     
-    message.success('Document download started')
+    handleSuccess('Download started')
   } catch (error) {
-    console.error('Download Failed:', error)
+    handleApiError(error, 'Download Failed')
+  } finally {
+    isLoading.value = false
   }
 }
 
-const viewDocument = (doc: Document) => {
+const viewDocument = async (doc: Document) => {
   try {
-    const viewUrl = documentsApi.getViewUrl(doc.id)
+    isLoading.value = true
+    const viewUrl = await documentsApi.getViewUrl(doc.id)
     
     window.open(viewUrl, '_blank')
     
-    message.success('Document opened for viewing')
+    handleSuccess('Document opened for viewing')
   } catch (error) {
-    console.error('View Failed:', error)
+    handleApiError(error, 'View Failed')
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -303,7 +307,7 @@ const columns = [
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Documents</h1>
-            <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">Manage your resumes, cover letters, and other documents</p>
+            <p style="margin: 0; color: var(--text-color);">Manage your resumes, cover letters, and other documents</p>
           </div>
           <n-button type="primary" @click="showUploadModal = true">
             <template #icon>
@@ -321,7 +325,7 @@ const columns = [
                   <DocumentOutline />
                 </n-icon>
                 <h3 style="margin: 8px 0;">{{ type.label }}s</h3>
-                <p style="margin: 0; color: rgba(255, 255, 255, 0.6); text-align: center;">
+                <p style="margin: 0; color: var(--text-color); text-align: center;">
                   {{ documents.filter(doc => doc.type === type.value).length }} document(s)
                 </p>
               </n-space>

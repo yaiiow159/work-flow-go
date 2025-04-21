@@ -21,8 +21,7 @@ import {
   NRadioGroup,
   NRadio,
   NAlert,
-  NSpin,
-  useMessage
+  NSpin
 } from 'naive-ui'
 import {
   SaveOutline,
@@ -31,8 +30,8 @@ import {
   CalendarOutline,
   PersonOutline
 } from '@vicons/ionicons5'
+import { handleApiError, handleSuccess } from '../utils/errorHandler'
 
-const message = useMessage()
 const isLoading = ref(true)
 const themeStore = useThemeStore()
 
@@ -111,7 +110,7 @@ onMounted(async () => {
       }
     }
   } catch (error) {
-    console.error('Failed to Load Settings:', error)
+    handleApiError(error, 'Failed to Load Settings')
   } finally {
     isLoading.value = false
   }
@@ -139,9 +138,9 @@ const saveSettings = async () => {
     }
     
     await userSettingsApi.update(settingsRequest)
-    message.success('Settings saved successfully')
+    handleSuccess('Settings saved successfully')
   } catch (error) {
-    console.error('Failed to Save Settings:', error)
+    handleApiError(error, 'Failed to Save Settings')
   } finally {
     isLoading.value = false
   }
@@ -150,30 +149,38 @@ const saveSettings = async () => {
 const resetSettings = async () => {
   try {
     isLoading.value = true
+    
+    // Call the reset settings API
     const data = await userSettingsApi.resetSettings()
     
+    // Update local state with the returned default settings
     userSettings.value = {
       theme: {
-        primaryColor: data.preferences?.theme?.primaryColor || '#6366F1'
+        primaryColor: data.preferences?.theme?.primaryColor || '#4a69bd'
       },
       notifications: data.preferences?.notifications || {
         enabled: true,
         emailNotifications: true,
         reminderTime: '1day'
       },
-      display: data.preferences?.display || {
-        defaultView: 'calendar',
-        compactMode: false
+      display: {
+        defaultView: (data.preferences?.display?.defaultView || 'calendar') as 'calendar' | 'list',
+        compactMode: data.preferences?.display?.compactMode || false
       },
       profile: {
-        name: data.name || 'User',
-        email: data.email || 'user@example.com'
+        name: data.name || userSettings.value.profile.name,
+        email: data.email || userSettings.value.profile.email
       }
     }
     
-    message.info('Settings reset to defaults')
+    // Update theme store with new values
+    themeStore.setPrimaryColor(userSettings.value.theme.primaryColor)
+    themeStore.setCompactMode(userSettings.value.display.compactMode)
+    themeStore.setDefaultView(userSettings.value.display.defaultView)
+    
+    handleSuccess('Settings reset to defaults')
   } catch (error) {
-    console.error('Failed to Reset Settings:', error)
+    handleApiError(error, 'Failed to Reset Settings')
   } finally {
     isLoading.value = false
   }
@@ -182,19 +189,22 @@ const resetSettings = async () => {
 const exportData = async () => {
   try {
     isLoading.value = true
-    const blob = await userSettingsApi.exportData()
     
-    const url = window.URL.createObjectURL(blob)
+    const data = await userSettingsApi.exportData()
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', `workflowgo-export-${Date.now()}.json`)
+    link.download = 'workflowgo-data-export.json'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     
-    message.success('Data exported successfully')
+    handleSuccess('Data exported successfully')
   } catch (error) {
-    console.error('Failed to Export Data:', error)
+    handleApiError(error, 'Failed to Export Data')
   } finally {
     isLoading.value = false
   }
@@ -208,7 +218,7 @@ const exportData = async () => {
       <n-space vertical size="large">
         <div>
           <h1 style="margin-bottom: 4px;">Settings</h1>
-          <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">Customize your interview tracking experience</p>
+          <p style="margin: 0; color: var(--text-color);">Customize your interview tracking experience</p>
         </div>
 
         <div v-if="isLoading" style="display: flex; justify-content: center; padding: 40px;">
@@ -318,7 +328,7 @@ const exportData = async () => {
                   </n-form-item>
 
                   <n-form-item label="Email">
-                    <n-input v-model:value="userSettings.profile.email" type="text" />
+                    <n-input v-model:value="userSettings.profile.email" />
                   </n-form-item>
                 </n-form>
               </n-card>
@@ -367,13 +377,13 @@ const exportData = async () => {
   align-items: center;
   padding: 12px 16px;
   border-radius: 4px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-color);
   text-decoration: none;
   transition: background-color 0.3s;
 }
 
 .settings-nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hover-color);
 }
 
 .settings-nav-item .n-icon {

@@ -6,7 +6,6 @@ import './style.css'
 
 import 'vfonts/Lato.css'
 import 'vfonts/FiraCode.css'
-// Import PrimeIcons CSS
 import 'primeicons/primeicons.css'
 import { useAuthStore } from './stores/auth'
 import { createDiscreteApi } from 'naive-ui'

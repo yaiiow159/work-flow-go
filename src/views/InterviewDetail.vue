@@ -24,8 +24,7 @@ import {
   NListItem,
   NThing,
   NPopconfirm,
-  useMessage,
-  useDialog
+  useMessage
 } from 'naive-ui'
 import {
   CalendarOutline,
@@ -42,13 +41,11 @@ import {
   StarOutline,
   ChatbubbleOutline
 } from '@vicons/ionicons5'
-import { handleApiError } from '../utils/errorHandler'
 
 const route = useRoute()
 const router = useRouter()
 const interviewStore = useInterviewStore()
 const message = useMessage()
-const dialog = useDialog()
 
 const isLoading = ref(true)
 const interview = ref<Interview | null>(null)
@@ -149,7 +146,7 @@ onMounted(async () => {
                 
                 <div>
                   <h1 style="margin-bottom: 4px;">{{ interview.companyName }}</h1>
-                  <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">{{ interview.position }}</p>
+                  <p style="margin: 0; color: var(--text-color-secondary);">{{ interview.position }}</p>
                 </div>
               </n-space>
             </div>
@@ -180,7 +177,7 @@ onMounted(async () => {
             <n-grid cols="1 m:3" :x-gap="16">
               <n-gi>
                 <n-space vertical align="center">
-                  <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">Status</div>
+                  <div style="font-size: 14px; color: var(--text-color-secondary);">Status</div>
                   <n-tag :type="getStatusType(interview.status)" size="large" round>
                     {{ interview.status.charAt(0).toUpperCase() + interview.status.slice(1) }}
                   </n-tag>
@@ -216,7 +213,7 @@ onMounted(async () => {
               
               <n-gi>
                 <n-space vertical align="center">
-                  <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">Date</div>
+                  <div style="font-size: 14px; color: var(--text-color-secondary);">Date</div>
                   <n-space align="center">
                     <n-icon><CalendarOutline /></n-icon>
                     <span style="font-size: 16px; font-weight: 500;">{{ formatDate(interview.date) }}</span>
@@ -226,7 +223,7 @@ onMounted(async () => {
               
               <n-gi>
                 <n-space vertical align="center">
-                  <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">Time & Type</div>
+                  <div style="font-size: 14px; color: var(--text-color-secondary);">Time & Type</div>
                   <n-space>
                     <n-space align="center">
                       <n-icon><TimeOutline /></n-icon>
@@ -359,7 +356,7 @@ onMounted(async () => {
                       <div v-if="question.answer" style="white-space: pre-wrap; margin-top: 8px;">
                         {{ question.answer }}
                       </div>
-                      <div v-else style="color: rgba(255, 255, 255, 0.4); margin-top: 8px;">
+                      <div v-else style="color: var(--text-color-disabled); margin-top: 8px;">
                         No answer provided
                       </div>
                     </n-thing>

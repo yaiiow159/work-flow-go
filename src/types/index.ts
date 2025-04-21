@@ -41,6 +41,7 @@ export interface Interview {
   contactPerson: ContactPerson
   questions: Question[]
   documents: Document[]
+  documentIds?: string[] | number[]
   rating: number
   feedback: string
   createdAt: string
@@ -138,6 +139,28 @@ export interface UserSettingsDTO {
   photoURL: string
   emailVerified: boolean
   preferences: UserPreferencesDTO
+}
+
+export interface UserProfileDTO {
+  id: number
+  name: string
+  email: string
+  bio: string
+  phone: string
+  location: string
+  company: string
+  position: string
+  photoURL: string
+}
+
+export interface UserProfileRequest {
+  name?: string
+  email?: string
+  bio?: string
+  phone?: string
+  location?: string
+  company?: string
+  position?: string
 }
 
 export interface UserSettingsRequest {

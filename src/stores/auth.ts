@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '../types/user'
-import type { UserInfo, UserSettingsDTO } from '../types'
+import type {UserInfo, UserProfileDTO} from '../types'
 import authService from '../services/auth'
 import { userSettingsApi } from '../services/api'
 
@@ -130,19 +130,19 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     
     try {
-      const updatedUserSettings: UserSettingsDTO = await userSettingsApi.uploadProfileImage(file)
+      const userProfile: UserProfileDTO = await userSettingsApi.uploadProfileImage(file)
       
-      if (userInfo.value && updatedUserSettings.photoURL) {
+      if (userInfo.value && userProfile.photoURL) {
         userInfo.value = {
           ...userInfo.value,
-          photoURL: updatedUserSettings.photoURL
+          photoURL: userProfile.photoURL
         }
       }
       
-      if (user.value && updatedUserSettings.photoURL) {
+      if (user.value && userProfile.photoURL) {
         user.value = {
           ...user.value,
-          photoURL: updatedUserSettings.photoURL
+          photoURL: userProfile.photoURL
         }
         localStorage.setItem('user', JSON.stringify(user.value))
       }

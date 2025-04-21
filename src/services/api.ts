@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance'
-import type {Document, Interview, Notification, UserInfo, UserSettingsDTO, UserSettingsRequest, PasswordChangeRequest} from '../types'
+import type {Document, Interview, Notification, UserInfo, UserProfileDTO, UserProfileRequest, UserSettingsDTO, UserSettingsRequest, PasswordChangeRequest} from '../types'
 
 export const interviewsApi = {
   getAll: async (params?: {
@@ -20,12 +20,22 @@ export const interviewsApi = {
   },
 
   create: async (interview: Omit<Interview, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const response = await axiosInstance.post<Interview>('/interviews', interview)
+    const interviewData = {
+      ...interview,
+      documentIds: interview.documentIds || interview.documents?.map(doc => doc.id) || []
+    }
+    
+    const response = await axiosInstance.post<Interview>('/interviews', interviewData)
     return response.data
   },
 
   update: async (id: string, interview: Partial<Interview>) => {
-    const response = await axiosInstance.put<Interview>(`/interviews/${id}`, interview)
+    const interviewData = {
+      ...interview,
+      documentIds: interview.documentIds || interview.documents?.map(doc => doc.id) || []
+    }
+    
+    const response = await axiosInstance.put<Interview>(`/interviews/${id}`, interviewData)
     return response.data
   },
 
@@ -73,12 +83,28 @@ export const documentsApi = {
     await axiosInstance.delete(`/documents/${id}`)
   },
   
-  getDownloadUrl: (id: string) => {
-    return `${axiosInstance.defaults.baseURL}/documents/${id}/download`
+  getDownloadUrl: async (id: string) => {
+    try {
+      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/download-url`, {
+        responseType: 'json'
+      })
+      return response.data.url
+    } catch (error) {
+      console.error('Error getting download URL:', error)
+      throw error
+    }
   },
   
-  getViewUrl: (id: string) => {
-    return `${axiosInstance.defaults.baseURL}/documents/${id}/view`
+  getViewUrl: async (id: string) => {
+    try {
+      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/view-url`, {
+        responseType: 'json'
+      })
+      return response.data.url
+    } catch (error) {
+      console.error('Error getting view URL:', error)
+      throw error
+    }
   }
 }
 
@@ -89,7 +115,12 @@ export const userApi = {
   },
   
   getUserProfile: async () => {
-    const response = await axiosInstance.get<UserInfo>('/user/profile')
+    const response = await axiosInstance.get<UserProfileDTO>('/users/profile')
+    return response.data
+  },
+  
+  updateUserProfile: async (profileData: UserProfileRequest) => {
+    const response = await axiosInstance.put<UserProfileDTO>('/users/profile', profileData)
     return response.data
   },
   
@@ -114,7 +145,7 @@ export const userSettingsApi = {
     const formData = new FormData()
     formData.append('file', file)
     
-    const response = await axiosInstance.post<UserSettingsDTO>('/users/profile/profile-image', formData, {
+    const response = await axiosInstance.post<UserProfileDTO>('/users/profile/profile-image', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

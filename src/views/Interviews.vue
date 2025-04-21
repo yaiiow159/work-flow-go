@@ -87,7 +87,7 @@ const columns = computed<DataTableColumns<Interview>>(() => [
         },
         [
           h('span', { style: { fontWeight: 500 } }, row.companyName),
-          h('span', { style: { fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)' } }, row.position)
+          h('span', { style: { fontSize: '12px', color: 'var(--text-secondary)' } }, row.position)
         ]
       )
     }
@@ -238,7 +238,7 @@ onMounted(async () => {
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Interviews</h1>
-            <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">Manage your upcoming and past interviews</p>
+            <p style="margin: 0; color: var(--text-secondary);">Manage your upcoming and past interviews</p>
           </div>
           
           <n-button type="primary" tag="a" href="/interviews/new">

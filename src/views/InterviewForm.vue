@@ -28,8 +28,7 @@ import {
   NInputGroup,
   NSwitch,
   NTag,
-  useMessage,
-  useDialog
+  useMessage
 } from 'naive-ui'
 import {
   SaveOutline,
@@ -43,13 +42,12 @@ import {
   HelpCircleOutline
 } from '@vicons/ionicons5'
 import { format, parse } from 'date-fns'
-import { handleApiError } from '../utils/errorHandler'
+import { handleApiError, handleSuccess } from '../utils/errorHandler'
 
 const router = useRouter()
 const route = useRoute()
 const interviewStore = useInterviewStore()
 const message = useMessage()
-const dialog = useDialog()
 const formRef = ref<any>(null)
 
 const isLoading = ref(true)
@@ -198,6 +196,7 @@ const saveInterview = (e: Event) => {
   
   formRef.value?.validate(async (errors: any) => {
     if (errors) {
+      message.error('Please fix the form errors before submitting')
       console.error('Form Error:', errors)
       return
     }
@@ -217,20 +216,31 @@ const saveInterview = (e: Event) => {
         formModel.time = format(date, 'HH:mm')
       }
       
+      const interviewData = {
+        ...formModel,
+        documents: formModel.documents.map(doc => ({
+          id: doc.id,
+          name: doc.name,
+          type: doc.type,
+          url: doc.url
+        })),
+        documentIds: formModel.documents.map(doc => doc.id)
+      }
+      
       if (isEditMode.value) {
-        result = await interviewStore.updateInterview(interviewId.value as string, formModel)
+        result = await interviewStore.updateInterview(interviewId.value as string, interviewData)
       } else {
-        result = await interviewStore.createInterview(formModel)
+        result = await interviewStore.createInterview(interviewData)
       }
       
       if (result) {
-        message.success(`Interview ${isEditMode.value ? 'updated' : 'created'} successfully`)
+        handleSuccess(`Interview ${isEditMode.value ? 'updated' : 'created'} successfully`)
         router.push('/interviews')
       } else if (interviewStore.error) {
-        console.error(`Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview:`, interviewStore.error)
+        handleApiError(interviewStore.error, `Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview`)
       }
     } catch (err) {
-      console.error(`Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview:`, err)
+      handleApiError(err, `Failed to ${isEditMode.value ? 'Update' : 'Create'} Interview`)
     } finally {
       isSaving.value = false
     }
@@ -262,12 +272,11 @@ onMounted(async () => {
           date.setHours(hours, minutes, 0, 0)
           timeValue.value = date.getTime()
         }
-      } else {
-        console.error('Not Found:', 'Interview not found')
-        router.push('/interviews')
+      } else if (interviewStore.error) {
+        handleApiError(interviewStore.error, 'Failed to Load Interview')
       }
     } catch (err) {
-      console.error('Failed to Load Interview:', err)
+      handleApiError(err, 'Failed to Load Interview')
     } finally {
       isLoading.value = false
     }
@@ -284,7 +293,7 @@ onMounted(async () => {
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">{{ isEditMode ? 'Edit Interview' : 'New Interview' }}</h1>
-            <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">
+            <p style="margin: 0; color: var(--text-color-secondary);">
               {{ isEditMode ? 'Update the details of your interview' : 'Schedule a new interview' }}
             </p>
           </div>
@@ -498,7 +507,7 @@ onMounted(async () => {
                         <p style="margin-top: 8px;">
                           Click or drag files to upload
                         </p>
-                        <p style="color: rgba(255, 255, 255, 0.5);">
+                        <p style="color: var(--text-color-secondary);">
                           Upload resumes, portfolios, or any other relevant documents
                         </p>
                       </div>

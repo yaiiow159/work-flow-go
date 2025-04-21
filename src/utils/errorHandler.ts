@@ -1,6 +1,9 @@
+import { createDiscreteApi } from 'naive-ui'
+
+const { message } = createDiscreteApi(['message'])
 
 /**
- * Handles API errors by logging them to the console
+ * Handles API errors by logging them to the console and showing a notification
  * @param error The error object from axios
  * @param title Optional context for the error
  */
@@ -38,4 +41,20 @@ export const handleApiError = (error: any, title = 'Error'): void => {
   }
   
   console.error(`[${title}]`, errorMessage, error)
+  
+  // Show error notification
+  message.error(`${title}: ${errorMessage}`)
+}
+
+/**
+ * Handles successful operations by showing a success notification
+ * @param msg The success message to display
+ * @param title Optional title for the success message
+ */
+export const handleSuccess = (msg: string, title = 'Success'): void => {
+  const successMessage = title ? `${title}: ${msg}` : msg
+  console.log(`[${title}]`, msg)
+  
+  // Show success notification
+  message.success(successMessage)
 }

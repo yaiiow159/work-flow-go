@@ -46,6 +46,9 @@ onMounted(() => {
   --surface-color: #ffffff;
   --surface-light-color: #f5f5f5;
   --text-secondary-color: #666;
+  --success-color: #18a058;
+  --error-color: #d03050;
+  --warning-color: #f0a020;
 }
 
 .dark-theme {
@@ -56,6 +59,9 @@ onMounted(() => {
   --surface-color: #1e1e1e;
   --surface-light-color: #2c2c2c;
   --text-secondary-color: #aaa;
+  --success-color: #18a058;
+  --error-color: #d03050;
+  --warning-color: #f0a020;
 }
 
 .light-theme {
@@ -66,6 +72,9 @@ onMounted(() => {
   --surface-color: #ffffff;
   --surface-light-color: #f5f5f5;
   --text-secondary-color: #666;
+  --success-color: #18a058;
+  --error-color: #d03050;
+  --warning-color: #f0a020;
 }
 
 body {

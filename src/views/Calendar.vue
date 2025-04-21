@@ -114,7 +114,7 @@ onMounted(async () => {
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Calendar</h1>
-            <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">View your interviews in calendar format</p>
+            <p style="margin: 0; color: var(--text-color-secondary);">View your interviews in calendar format</p>
           </div>
           
           <n-button type="primary" tag="a" href="/interviews/new">
@@ -271,7 +271,7 @@ onMounted(async () => {
   right: 4px;
   font-weight: 500;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-color-secondary);
 }
 
 .day-events {

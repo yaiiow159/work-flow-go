@@ -22,7 +22,6 @@ import {
   NTag,
   NTimeline,
   NTimelineItem,
-  useMessage,
   NProgress,
   NTooltip
 } from 'naive-ui'
@@ -35,10 +34,10 @@ import {
   TrendingUpOutline,
   NotificationsOutline
 } from '@vicons/ionicons5'
+import {handleApiError, handleSuccess} from '../utils/errorHandler'
 
 const router = useRouter()
 const interviewStore = useInterviewStore()
-const message = useMessage()
 const isLoading = ref(true)
 const statsData = ref({
   totalInterviews: 0,
@@ -62,7 +61,7 @@ const stats = computed(() => {
   const completedInterviews = statsData.value.completedInterviews || interviews.filter(i => i.status === 'completed').length
   const rejectedInterviews = statsData.value.rejectedInterviews || interviews.filter(i => i.status === 'rejected').length
   const successRate = totalInterviews > 0
-    ? Math.round((completedInterviews / totalInterviews) * 100)
+    ? Number(((completedInterviews / totalInterviews) * 100).toFixed(2))
     : 0
 
   return {
@@ -78,7 +77,7 @@ const formatDate = (dateString: string) => {
   try {
     return format(new Date(dateString), 'MMM dd, yyyy')
   } catch (error) {
-    console.error('Error formatting date:', error)
+    handleApiError(error, 'Error formatting date')
     return dateString
   }
 }
@@ -110,7 +109,7 @@ const navigateTo = (path: string) => {
   } else if (path === 'interviews') {
     router.push({ name: 'Interviews' })
   } else {
-    router.push({ name: path })
+    router.push(path)
   }
 }
 
@@ -119,10 +118,10 @@ const toggleReminders = () => {
   
   if (remindersEnabled.value) {
     setupInterviewReminders()
-    message.success('Interview reminders enabled')
+    handleSuccess('Interview reminders enabled')
   } else {
     timerService.clearAllReminders()
-    message.info('Interview reminders disabled')
+    handleSuccess('Interview reminders disabled', 'Info')
   }
 }
 
@@ -140,10 +139,10 @@ const getCountdownProgress = (minutes: number) => {
   }
   
   if (minutes < 24 * 60) {
-    return 100 - (minutes / (24 * 60) * 100)
+    return Number((100 - (minutes / (24 * 60) * 100)).toFixed(2))
   }
   else if (minutes < 7 * 24 * 60) {
-    return 100 - (minutes / (7 * 24 * 60) * 100)
+    return Number((100 - (minutes / (7 * 24 * 60) * 100)).toFixed(2))
   }
   
   return 5
@@ -160,11 +159,10 @@ onMounted(async () => {
     try {
       statsData.value = await statisticsApi.getInterviewStats()
     } catch (err) {
-      console.error('Failed to load statistics:', err)
+      handleApiError(err, 'Failed to load statistics')
     }
   } catch (err) {
-    console.error(err)
-    message.error('Failed to load interviews')
+    handleApiError(err, 'Failed to load interviews')
   } finally {
     isLoading.value = false
   }
@@ -186,7 +184,7 @@ const upcomingWithRemaining = computed(() => {
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Dashboard</h1>
-            <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">Your interview tracking overview</p>
+            <p style="margin: 0; color: var(--text-color); opacity: 0.6;">Your interview tracking overview</p>
           </div>
 
           <n-space>
@@ -224,7 +222,7 @@ const upcomingWithRemaining = computed(() => {
               <n-card>
                 <n-statistic label="Total Interviews">
                   <template #prefix>
-                    <n-icon color="#63e2b7">
+                    <n-icon color="var(--primary-color)">
                       <BusinessOutline />
                     </n-icon>
                   </template>
@@ -241,7 +239,7 @@ const upcomingWithRemaining = computed(() => {
               <n-card>
                 <n-statistic label="Upcoming Interviews">
                   <template #prefix>
-                    <n-icon color="#2080f0">
+                    <n-icon color="var(--primary-color)">
                       <CalendarOutline />
                     </n-icon>
                   </template>
@@ -258,7 +256,7 @@ const upcomingWithRemaining = computed(() => {
               <n-card>
                 <n-statistic label="Completed Interviews">
                   <template #prefix>
-                    <n-icon color="#18a058">
+                    <n-icon color="var(--success-color)">
                       <CheckmarkCircleOutline />
                     </n-icon>
                   </template>
@@ -275,7 +273,7 @@ const upcomingWithRemaining = computed(() => {
               <n-card>
                 <n-statistic label="Success Rate">
                   <template #prefix>
-                    <n-icon :color="stats.successRate >= 50 ? '#18a058' : '#d03050'">
+                    <n-icon :color="stats.successRate >= 50 ? 'var(--success-color)' : 'var(--error-color)'">
                       <TrendingUpOutline v-if="stats.successRate >= 50" />
                       <TrendingDownOutline v-else />
                     </n-icon>
@@ -337,7 +335,7 @@ const upcomingWithRemaining = computed(() => {
                   
                   <div class="countdown-container">
                     <n-space align="center">
-                      <n-icon :color="interview.minutes < 60 ? '#d03050' : interview.minutes < 24 * 60 ? '#f0a020' : '#18a058'">
+                      <n-icon :color="interview.minutes < 60 ? 'var(--error-color)' : interview.minutes < 24 * 60 ? 'var(--warning-color)' : 'var(--success-color)'">
                         <TimeOutline />
                       </n-icon>
                       <span>{{ interview.timeRemaining }}</span>
@@ -345,7 +343,7 @@ const upcomingWithRemaining = computed(() => {
                     <n-progress 
                       type="line" 
                       :percentage="getCountdownProgress(interview.minutes)" 
-                      :color="interview.minutes < 60 ? '#d03050' : interview.minutes < 24 * 60 ? '#f0a020' : '#18a058'"
+                      :color="interview.minutes < 60 ? 'var(--error-color)' : interview.minutes < 24 * 60 ? 'var(--warning-color)' : 'var(--success-color)'"
                       :height="8"
                       :border-radius="4"
                     />

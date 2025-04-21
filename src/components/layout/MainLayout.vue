@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SideNavigation from './SideNavigation.vue'
 import TopBar from './TopBar.vue'
@@ -17,10 +17,8 @@ import {
   NTooltip
 } from 'naive-ui'
 import {
-  LogOutOutline,
   MenuOutline,
   MoonOutline,
-  SettingsOutline,
   SunnyOutline
 } from '@vicons/ionicons5'
 import { useAuthStore } from '../../stores/auth'
