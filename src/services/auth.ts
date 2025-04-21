@@ -36,13 +36,12 @@ class AuthService {
     }
   }
 
-  async register(email: string, password: string, displayName: string, verificationCode: string): Promise<RegisterResponse> {
+  async register(email: string, password: string, displayName: string): Promise<RegisterResponse> {
     try {
       const response = await axiosInstance.post(`/auth/register`, {
         email,
         password,
-        displayName,
-        verificationCode
+        displayName
       })
       return response.data
     } catch (error: any) {

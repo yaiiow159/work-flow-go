@@ -10,7 +10,6 @@ export const useAuthStore = defineStore('auth', () => {
   const userInfo = ref<UserInfo | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const emailVerified = ref(false)
   
   const isAuthenticated = computed(() => !!user.value)
   const userDisplayName = computed(() => user.value?.displayName || user.value?.email || 'User')
@@ -62,45 +61,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
   
-  const requestEmailVerification = async (email: string) => {
-    loading.value = true
-    error.value = null
-    emailVerified.value = false
-    
-    try {
-      const response = await authService.requestEmailVerification(email)
-      return response.success
-    } catch (err: any) {
-      error.value = err.message || 'Failed to send verification code'
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-  
-  const verifyEmailCode = async (email: string, code: string) => {
+  const register = async (email: string, password: string, displayName: string) => {
     loading.value = true
     error.value = null
     
     try {
-      const response = await authService.verifyEmailCode(email, code)
-      emailVerified.value = response.success
-      return response.success
-    } catch (err: any) {
-      error.value = err.message || 'Invalid verification code'
-      emailVerified.value = false
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-  
-  const register = async (email: string, password: string, displayName: string, verificationCode: string) => {
-    loading.value = true
-    error.value = null
-    
-    try {
-      const response = await authService.register(email, password, displayName, verificationCode)
+      const response = await authService.register(email, password, displayName)
       return response.success;
     } catch (err: any) {
       error.value = err.message || 'Registration failed'
@@ -160,14 +126,11 @@ export const useAuthStore = defineStore('auth', () => {
     userInfo,
     loading,
     error,
-    emailVerified,
     isAuthenticated,
     userDisplayName,
     initAuth,
     loginWithCredentials,
     loginWithGoogle,
-    requestEmailVerification,
-    verifyEmailCode,
     register,
     logout,
     updateProfileImage
