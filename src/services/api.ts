@@ -85,7 +85,7 @@ export const documentsApi = {
   
   getDownloadUrl: async (id: string) => {
     try {
-      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/download-url`, {
+      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/download`, {
         responseType: 'json'
       })
       return response.data.url
@@ -97,7 +97,7 @@ export const documentsApi = {
   
   getViewUrl: async (id: string) => {
     try {
-      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/view-url`, {
+      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/view`, {
         responseType: 'json'
       })
       return response.data.url
@@ -125,7 +125,7 @@ export const userApi = {
   },
   
   changePassword: async (passwordChangeRequest: PasswordChangeRequest) => {
-    const response = await axiosInstance.post<string>('/user/change-password', passwordChangeRequest)
+    const response = await axiosInstance.post<string>('/users/profile/change-password', passwordChangeRequest)
     return response.data
   }
 }

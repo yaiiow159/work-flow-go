@@ -173,21 +173,22 @@ onMounted(async () => {
             </n-space>
           </n-space>
           
-          <n-card>
-            <n-grid cols="1 m:3" :x-gap="16">
+          <n-card class="interview-summary-card" bordered>
+            <n-grid cols="1 m:3" :x-gap="24" :y-gap="24">
               <n-gi>
                 <n-space vertical align="center">
-                  <div style="font-size: 14px; color: var(--text-color-secondary);">Status</div>
-                  <n-tag :type="getStatusType(interview.status)" size="large" round>
+                  <div style="font-size: 14px; color: var(--text-color-secondary); margin-bottom: 8px;">Status</div>
+                  <n-tag :type="getStatusType(interview.status)" size="large" round style="padding: 4px 16px;">
                     {{ interview.status.charAt(0).toUpperCase() + interview.status.slice(1) }}
                   </n-tag>
                   
-                  <n-space v-if="interview.status !== 'completed' && interview.status !== 'rejected'">
+                  <n-space v-if="interview.status !== 'completed' && interview.status !== 'rejected'" style="margin-top: 12px;">
                     <n-button 
                       size="small" 
                       type="primary"
                       @click="updateStatus('confirmed')"
                       :disabled="interview.status === 'confirmed'"
+                      style="min-width: 80px;"
                     >
                       Confirm
                     </n-button>
@@ -196,6 +197,7 @@ onMounted(async () => {
                       size="small" 
                       type="success"
                       @click="updateStatus('completed')"
+                      style="min-width: 80px;"
                     >
                       Complete
                     </n-button>
@@ -204,6 +206,7 @@ onMounted(async () => {
                       size="small" 
                       type="error"
                       @click="updateStatus('rejected')"
+                      style="min-width: 80px;"
                     >
                       Reject
                     </n-button>
@@ -213,9 +216,9 @@ onMounted(async () => {
               
               <n-gi>
                 <n-space vertical align="center">
-                  <div style="font-size: 14px; color: var(--text-color-secondary);">Date</div>
+                  <div style="font-size: 14px; color: var(--text-color-secondary); margin-bottom: 8px;">Date</div>
                   <n-space align="center">
-                    <n-icon><CalendarOutline /></n-icon>
+                    <n-icon color="var(--primary-color)"><CalendarOutline /></n-icon>
                     <span style="font-size: 16px; font-weight: 500;">{{ formatDate(interview.date) }}</span>
                   </n-space>
                 </n-space>
@@ -223,17 +226,17 @@ onMounted(async () => {
               
               <n-gi>
                 <n-space vertical align="center">
-                  <div style="font-size: 14px; color: var(--text-color-secondary);">Time & Type</div>
+                  <div style="font-size: 14px; color: var(--text-color-secondary); margin-bottom: 8px;">Time & Type</div>
                   <n-space>
                     <n-space align="center">
-                      <n-icon><TimeOutline /></n-icon>
+                      <n-icon color="var(--primary-color)"><TimeOutline /></n-icon>
                       <span style="font-size: 16px; font-weight: 500;">{{ formatTime(interview.time) }}</span>
                     </n-space>
                     
                     <n-divider vertical />
                     
                     <n-space align="center">
-                      <n-icon><BusinessOutline /></n-icon>
+                      <n-icon color="var(--primary-color)"><BusinessOutline /></n-icon>
                       <span style="font-size: 16px; font-weight: 500;">
                         {{ interview.type === 'onsite' ? 'On-site' : interview.type === 'remote' ? 'Remote' : 'Phone' }}
                       </span>
@@ -248,24 +251,24 @@ onMounted(async () => {
             <n-tab-pane name="details" tab="Details">
               <n-grid cols="1 m:2" :x-gap="24" :y-gap="24">
                 <n-gi v-if="interview.contactPerson">
-                  <n-card title="Contact Person">
+                  <n-card title="Contact Person" class="detail-card" bordered>
                     <template #header-extra>
-                      <n-icon><PersonOutline /></n-icon>
+                      <n-icon color="var(--primary-color)"><PersonOutline /></n-icon>
                     </template>
                     
                     <n-descriptions :column="1" label-placement="left" label-width="120">
                       <n-descriptions-item label="Name">
-                        {{ interview.contactPerson.name }}
+                        <span style="font-weight: 500;">{{ interview.contactPerson.name }}</span>
                       </n-descriptions-item>
                       
                       <n-descriptions-item v-if="interview.contactPerson.position" label="Position">
-                        {{ interview.contactPerson.position }}
+                        <span>{{ interview.contactPerson.position }}</span>
                       </n-descriptions-item>
                       
                       <n-descriptions-item v-if="interview.contactPerson.email" label="Email">
                         <n-space align="center">
-                          <n-icon><MailOutline /></n-icon>
-                          <a :href="`mailto:${interview.contactPerson.email}`" style="color: inherit;">
+                          <n-icon color="var(--primary-color)"><MailOutline /></n-icon>
+                          <a :href="`mailto:${interview.contactPerson.email}`" class="contact-link">
                             {{ interview.contactPerson.email }}
                           </a>
                         </n-space>
@@ -273,8 +276,8 @@ onMounted(async () => {
                       
                       <n-descriptions-item v-if="interview.contactPerson.phone" label="Phone">
                         <n-space align="center">
-                          <n-icon><CallOutline /></n-icon>
-                          <a :href="`tel:${interview.contactPerson.phone}`" style="color: inherit;">
+                          <n-icon color="var(--primary-color)"><CallOutline /></n-icon>
+                          <a :href="`tel:${interview.contactPerson.phone}`" class="contact-link">
                             {{ interview.contactPerson.phone }}
                           </a>
                         </n-space>
@@ -284,45 +287,55 @@ onMounted(async () => {
                 </n-gi>
                 
                 <n-gi v-if="interview.location">
-                  <n-card title="Location">
+                  <n-card title="Location" class="detail-card" bordered>
                     <template #header-extra>
-                      <n-icon><LocationOutline /></n-icon>
+                      <n-icon color="var(--primary-color)"><LocationOutline /></n-icon>
                     </template>
                     
-                    <p>{{ interview.location }}</p>
+                    <div style="margin-bottom: 16px; white-space: pre-wrap;">{{ interview.location }}</div>
                     
                     <n-button 
                       v-if="interview.type === 'onsite'" 
                       block 
+                      type="primary"
                       tag="a" 
                       :href="`https://maps.google.com/?q=${encodeURIComponent(interview.location)}`"
                       target="_blank"
                     >
+                      <template #icon>
+                        <n-icon><LocationOutline /></n-icon>
+                      </template>
                       Open in Maps
                     </n-button>
                   </n-card>
                 </n-gi>
                 
                 <n-gi v-if="interview.notes">
-                  <n-card title="Notes">
+                  <n-card title="Notes" class="detail-card" bordered>
                     <template #header-extra>
-                      <n-icon><ChatbubbleOutline /></n-icon>
+                      <n-icon color="var(--primary-color)"><ChatbubbleOutline /></n-icon>
                     </template>
                     
-                    <p style="white-space: pre-wrap;">{{ interview.notes }}</p>
+                    <div style="white-space: pre-wrap; background-color: var(--card-color); padding: 16px; border-radius: 4px; border-left: 3px solid var(--primary-color);">
+                      {{ interview.notes }}
+                    </div>
                   </n-card>
                 </n-gi>
                 
                 <n-gi v-if="interview.status === 'completed' && interview.feedback">
-                  <n-card title="Feedback">
+                  <n-card title="Feedback" class="detail-card" bordered>
                     <template #header-extra>
                       <n-space>
-                        <n-icon><StarOutline /></n-icon>
-                        <span v-if="interview.rating">{{ interview.rating }}/5</span>
+                        <n-icon color="var(--warning-color)"><StarOutline /></n-icon>
+                        <span v-if="interview.rating" style="font-weight: 500; color: var(--warning-color);">
+                          {{ interview.rating }}/5
+                        </span>
                       </n-space>
                     </template>
                     
-                    <p style="white-space: pre-wrap;">{{ interview.feedback }}</p>
+                    <div style="white-space: pre-wrap; background-color: var(--card-color); padding: 16px; border-radius: 4px; border-left: 3px solid var(--warning-color);">
+                      {{ interview.feedback }}
+                    </div>
                   </n-card>
                 </n-gi>
               </n-grid>
@@ -330,12 +343,11 @@ onMounted(async () => {
             
             <n-tab-pane name="questions" tab="Questions">
               <div v-if="interview.questions && interview.questions.length > 0">
-                <n-list>
-                  <n-list-item v-for="question in interview.questions" :key="question.id">
-                    <n-thing>
-                      <template #header>
-                        <n-space align="center">
-                          <span style="font-weight: 500;">{{ question.question }}</span>
+                <n-list bordered>
+                  <n-list-item v-for="(question, index) in interview.questions" :key="question.id">
+                    <n-card :title="`Question ${index + 1}`" size="small" style="width: 100%">
+                      <template #header-extra>
+                        <n-space>
                           <n-tag 
                             v-if="question.isImportant" 
                             type="warning" 
@@ -353,13 +365,26 @@ onMounted(async () => {
                         </n-space>
                       </template>
                       
-                      <div v-if="question.answer" style="white-space: pre-wrap; margin-top: 8px;">
-                        {{ question.answer }}
-                      </div>
-                      <div v-else style="color: var(--text-color-disabled); margin-top: 8px;">
-                        No answer provided
-                      </div>
-                    </n-thing>
+                      <n-space vertical>
+                        <div style="font-weight: 500; font-size: 16px; color: var(--primary-color);">
+                          {{ question.question }}
+                        </div>
+                        
+                        <n-divider style="margin: 12px 0;" />
+                        
+                        <div>
+                          <div style="font-weight: 500; margin-bottom: 8px; color: var(--text-color-secondary);">
+                            Answer:
+                          </div>
+                          <div v-if="question.answer" style="white-space: pre-wrap; background-color: var(--card-color); padding: 12px; border-radius: 4px; border-left: 3px solid var(--primary-color);">
+                            {{ question.answer }}
+                          </div>
+                          <div v-else style="color: var(--text-color-disabled); font-style: italic; padding: 12px;">
+                            No answer provided yet
+                          </div>
+                        </div>
+                      </n-space>
+                    </n-card>
                   </n-list-item>
                 </n-list>
               </div>
@@ -405,3 +430,32 @@ onMounted(async () => {
     </div>
   </MainLayout>
 </template>
+
+<style scoped>
+.page-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.interview-summary-card {
+  margin-bottom: 24px;
+  background-color: var(--card-color);
+  transition: all 0.3s ease;
+}
+
+.detail-card {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.contact-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: opacity 0.3s;
+}
+
+.contact-link:hover {
+  opacity: 0.8;
+}
+</style>

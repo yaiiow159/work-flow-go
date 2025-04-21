@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import MainLayout from '../components/layout/MainLayout.vue'
 import { userSettingsApi } from '../services/api'
 import type { UserSettingsRequest } from '../types'
@@ -34,6 +34,27 @@ import { handleApiError, handleSuccess } from '../utils/errorHandler'
 
 const isLoading = ref(true)
 const themeStore = useThemeStore()
+
+// Store original settings to use for reset
+const originalSettings = ref({
+  theme: {
+    primaryColor: '',
+    isDarkMode: false
+  },
+  notifications: {
+    enabled: true,
+    emailNotifications: true,
+    reminderTime: '1day'
+  },
+  display: {
+    defaultView: 'calendar' as 'calendar' | 'list',
+    compactMode: false
+  },
+  profile: {
+    name: '',
+    email: ''
+  }
+})
 
 interface UserSettings {
   theme: {
@@ -86,11 +107,24 @@ const viewOptions = [
   { label: 'List', value: 'list' }
 ]
 
+// Apply settings immediately in the frontend without saving to backend
+watch(() => userSettings.value.theme.primaryColor, (newColor) => {
+  themeStore.setPrimaryColor(newColor)
+}, { deep: true })
+
+watch(() => userSettings.value.display.compactMode, (newValue) => {
+  themeStore.setCompactMode(newValue)
+})
+
+watch(() => userSettings.value.display.defaultView, (newValue) => {
+  themeStore.setDefaultView(newValue)
+})
+
 onMounted(async () => {
   try {
     isLoading.value = true
     const data = await userSettingsApi.get()
-    
+
     userSettings.value = {
       theme: {
         primaryColor: themeStore.primaryColor
@@ -99,6 +133,24 @@ onMounted(async () => {
         enabled: true,
         emailNotifications: true,
         reminderTime: '1day'
+      },
+      display: {
+        defaultView: themeStore.defaultView,
+        compactMode: themeStore.compactMode
+      },
+      profile: {
+        name: data.name || 'User',
+        email: data.email || 'user@example.com'
+      }
+    }
+    
+    originalSettings.value = {
+      theme: {
+        primaryColor: themeStore.primaryColor,
+        isDarkMode: themeStore.isDarkMode
+      },
+      notifications: {
+        ...userSettings.value.notifications
       },
       display: {
         defaultView: themeStore.defaultView,
@@ -120,10 +172,6 @@ const saveSettings = async () => {
   try {
     isLoading.value = true
     
-    themeStore.setPrimaryColor(userSettings.value.theme.primaryColor)
-    themeStore.setCompactMode(userSettings.value.display.compactMode)
-    themeStore.setDefaultView(userSettings.value.display.defaultView)
-    
     const settingsRequest: UserSettingsRequest = {
       name: userSettings.value.profile.name,
       email: userSettings.value.profile.email,
@@ -138,6 +186,26 @@ const saveSettings = async () => {
     }
     
     await userSettingsApi.update(settingsRequest)
+    
+    // Update original settings after successful save
+    originalSettings.value = {
+      theme: {
+        primaryColor: userSettings.value.theme.primaryColor,
+        isDarkMode: themeStore.isDarkMode
+      },
+      notifications: {
+        ...userSettings.value.notifications
+      },
+      display: {
+        defaultView: userSettings.value.display.defaultView,
+        compactMode: userSettings.value.display.compactMode
+      },
+      profile: {
+        name: userSettings.value.profile.name,
+        email: userSettings.value.profile.email
+      }
+    }
+    
     handleSuccess('Settings saved successfully')
   } catch (error) {
     handleApiError(error, 'Failed to Save Settings')
@@ -146,44 +214,34 @@ const saveSettings = async () => {
   }
 }
 
-const resetSettings = async () => {
-  try {
-    isLoading.value = true
-    
-    // Call the reset settings API
-    const data = await userSettingsApi.resetSettings()
-    
-    // Update local state with the returned default settings
-    userSettings.value = {
-      theme: {
-        primaryColor: data.preferences?.theme?.primaryColor || '#4a69bd'
-      },
-      notifications: data.preferences?.notifications || {
-        enabled: true,
-        emailNotifications: true,
-        reminderTime: '1day'
-      },
-      display: {
-        defaultView: (data.preferences?.display?.defaultView || 'calendar') as 'calendar' | 'list',
-        compactMode: data.preferences?.display?.compactMode || false
-      },
-      profile: {
-        name: data.name || userSettings.value.profile.name,
-        email: data.email || userSettings.value.profile.email
-      }
-    }
-    
-    // Update theme store with new values
-    themeStore.setPrimaryColor(userSettings.value.theme.primaryColor)
-    themeStore.setCompactMode(userSettings.value.display.compactMode)
-    themeStore.setDefaultView(userSettings.value.display.defaultView)
-    
-    handleSuccess('Settings reset to defaults')
-  } catch (error) {
-    handleApiError(error, 'Failed to Reset Settings')
-  } finally {
-    isLoading.value = false
+const resetSettings = () => {
+  themeStore.setPrimaryColor(originalSettings.value.theme.primaryColor)
+  
+  if (themeStore.isDarkMode !== originalSettings.value.theme.isDarkMode) {
+    themeStore.toggleDarkMode()
   }
+  
+  themeStore.setCompactMode(originalSettings.value.display.compactMode)
+  themeStore.setDefaultView(originalSettings.value.display.defaultView)
+  
+  userSettings.value = {
+    theme: {
+      primaryColor: originalSettings.value.theme.primaryColor
+    },
+    notifications: {
+      ...originalSettings.value.notifications
+    },
+    display: {
+      defaultView: originalSettings.value.display.defaultView,
+      compactMode: originalSettings.value.display.compactMode
+    },
+    profile: {
+      name: originalSettings.value.profile.name,
+      email: originalSettings.value.profile.email
+    }
+  }
+  
+  handleSuccess('Settings reset to original values')
 }
 
 const exportData = async () => {
@@ -346,11 +404,11 @@ const exportData = async () => {
                 <n-divider />
 
                 <n-alert type="warning" title="Reset Settings" style="margin-bottom: 16px;">
-                  This will reset all your settings to default values. Your interview data will not be affected.
+                  This will reset all your settings to their original values. Your interview data will not be affected.
                 </n-alert>
 
                 <n-space>
-                  <n-button type="warning" @click="resetSettings" :loading="isLoading">Reset to Defaults</n-button>
+                  <n-button type="warning" @click="resetSettings" :loading="isLoading">Reset to Original</n-button>
                 </n-space>
               </n-card>
 
@@ -379,14 +437,19 @@ const exportData = async () => {
   border-radius: 4px;
   color: var(--text-color);
   text-decoration: none;
-  transition: background-color 0.3s;
 }
 
 .settings-nav-item:hover {
-  background-color: var(--hover-color);
+  background-color: rgba(128, 128, 128, 0.1);
 }
 
-.settings-nav-item .n-icon {
+.settings-nav-item n-icon {
   margin-right: 12px;
+}
+
+.page-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 </style>
