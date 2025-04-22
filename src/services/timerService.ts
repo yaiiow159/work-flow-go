@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { useInterviewStore } from '../stores/interview'
 import type{ Interview } from '../types'
 import { differenceInMinutes, differenceInHours, differenceInDays, parseISO } from 'date-fns'
+import { userSettingsApi } from '../services/api'
 
 type TimeoutId = ReturnType<typeof setTimeout>
 
@@ -73,22 +74,55 @@ export const useTimerService = () => {
     }
   })
   
-  const setupReminders = (callback: (interview: Interview & { reminderLabel?: string }) => void) => {
+  const setupReminders = async (callback: (interview: Interview & { reminderLabel?: string }) => void) => {
     try {
       clearAllReminders()
+      
+      let userReminderTime = '1day'
+      try {
+        const userSettings = await userSettingsApi.get()
+        userReminderTime = userSettings.preferences?.notifications?.reminderTime || '1day'
+      } catch (error) {
+        console.warn('Could not fetch user settings, using default reminder time:', error)
+      }
       
       interviewStore.upcomingInterviews.forEach(interview => {
         const { minutes, isPast } = getTimeRemaining(interview)
         
         if (isPast) return
         
-        const reminderTimes = [
-          { minutes: 24 * 60, label: '1 day' },
-          { minutes: 60, label: '1 hour' },
-          { minutes: 30, label: '30 minutes' },
-          { minutes: 15, label: '15 minutes' },
-          { minutes: 5, label: '5 minutes' }
+        let reminderTimes = []
+        
+        const getReminderMinutes = (setting: string): number => {
+          switch (setting) {
+            case '30min': return 30
+            case '1hour': return 60
+            case '3hours': return 180
+            case '1day': return 24 * 60
+            case '2days': return 48 * 60
+            default: return 24 * 60 // Default to 1 day
+          }
+        }
+        
+        const getReminderLabel = (setting: string): string => {
+          switch (setting) {
+            case '30min': return '30 minutes'
+            case '1hour': return '1 hour'
+            case '3hours': return '3 hours'
+            case '1day': return '1 day'
+            case '2days': return '2 days'
+            default: return '1 day'
+          }
+        }
+        
+        const userReminderMinutes = getReminderMinutes(userReminderTime)
+        reminderTimes = [
+          { minutes: userReminderMinutes, label: getReminderLabel(userReminderTime) }
         ]
+        
+        if (userReminderMinutes > 5) {
+          reminderTimes.push({ minutes: 5, label: '5 minutes' })
+        }
         
         reminderTimes.forEach(reminder => {
           const timeToReminder = minutes - reminder.minutes

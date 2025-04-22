@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import {
   NConfigProvider,
   NDialogProvider,
@@ -10,12 +10,22 @@ import {
 import { RouterView } from 'vue-router'
 import { useThemeStore } from './stores/theme'
 import { useAuthStore } from './stores/auth'
+import { useWebSocket } from './services/websocket'
+import { startInterviewReminderService, stopInterviewReminderService } from './services/interviewReminder'
 
 const themeStore = useThemeStore()
-
-// Keep authStore for authentication functionality even though TypeScript thinks it's unused
-// @ts-ignore
 const authStore = useAuthStore()
+const { connect, disconnect } = useWebSocket()
+
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+  if (isAuthenticated) {
+    connect()
+    startInterviewReminderService()
+  } else {
+    disconnect()
+    stopInterviewReminderService()
+  }
+}, { immediate: true })
 
 onMounted(() => {
   themeStore.initTheme()

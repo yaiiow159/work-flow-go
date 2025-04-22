@@ -113,11 +113,11 @@ const navigateTo = (path: string) => {
   }
 }
 
-const toggleReminders = () => {
+const toggleReminders = async () => {
   remindersEnabled.value = !remindersEnabled.value
-  
+
   if (remindersEnabled.value) {
-    setupInterviewReminders()
+    await setupInterviewReminders()
     handleSuccess('Interview reminders enabled')
   } else {
     timerService.clearAllReminders()
@@ -125,9 +125,9 @@ const toggleReminders = () => {
   }
 }
 
-const setupInterviewReminders = () => {
+const setupInterviewReminders = async () => {
   if (remindersEnabled.value) {
-    timerService.setupReminders((interview: Interview & { reminderLabel?: string }) => {
+    await timerService.setupReminders((interview: Interview & { reminderLabel?: string }) => {
       notificationService.notifyUpcomingInterview(interview)
     })
   }
@@ -137,14 +137,14 @@ const getCountdownProgress = (minutes: number) => {
   if (minutes < 0) {
     return 100
   }
-  
+
   if (minutes < 24 * 60) {
     return Number((100 - (minutes / (24 * 60) * 100)).toFixed(2))
   }
   else if (minutes < 7 * 24 * 60) {
     return Number((100 - (minutes / (7 * 24 * 60) * 100)).toFixed(2))
   }
-  
+
   return 5
 }
 
@@ -153,8 +153,8 @@ onMounted(async () => {
     isLoading.value = true
 
     await interviewStore.fetchInterviews()
-    
-    setupInterviewReminders()
+
+    await setupInterviewReminders()
 
     try {
       statsData.value = await statisticsApi.getInterviewStats()

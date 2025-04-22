@@ -177,32 +177,32 @@ export const statisticsApi = {
 }
 
 export const notificationsApi = {
-
-  create: async (notification: Omit<Notification, 'id'>) => {
+  create: async (notification: Omit<Notification, 'id'>): Promise<Notification> => {
     const response = await axiosInstance.post<Notification>('/notifications', notification)
     return response.data
   },
 
-  getAll: async () => {
+  getAll: async (): Promise<Notification[]> => {
     const response = await axiosInstance.get<Notification[]>('/notifications')
     return response.data
   },
 
-  markAsRead: async (id: string) => {
-    const response = await axiosInstance.patch<Notification>(`/notifications/${id}/read`)
-    return response.data
+  markAsRead: async (id: string): Promise<boolean> => {
+    const response = await axiosInstance.patch<{ success: boolean }>(`/notifications/${id}/read`)
+    return response.data.success
   },
 
-  markAllAsRead: async () => {
+  markAllAsRead: async (): Promise<boolean> => {
     const response = await axiosInstance.patch<{ success: boolean }>('/notifications/read-all')
-    return response.data
+    return response.data.success
   },
 
-  delete: async (id: string) => {
-    await axiosInstance.delete(`/notifications/${id}`)
+  delete: async (id: string): Promise<boolean> => {
+    const response = await axiosInstance.delete<void>(`/notifications/${id}`)
+    return response.status >= 200 && response.status < 300
   },
 
-  getUnreadCount: async () => {
+  getUnreadCount: async (): Promise<number> => {
     const response = await axiosInstance.get<{ count: number }>('/notifications/unread-count')
     return response.data.count
   }

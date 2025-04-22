@@ -5,6 +5,12 @@ export interface User {
   photoURL?: string;
   authProvider: 'google' | 'email' | 'password';
   token: string;
+  preferences?: {
+    notifications?: {
+      enabled?: boolean;
+      reminderTime?: string;
+    }
+  };
 }
 
 export interface AuthResponse {
@@ -17,4 +23,3 @@ export interface RegisterResponse {
   success: boolean;
   message: string;
 }
-

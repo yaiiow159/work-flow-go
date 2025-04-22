@@ -113,6 +113,13 @@ onMounted(async () => {
     const fetchedInterview = await interviewStore.getInterviewById(interviewId.value)
     if (fetchedInterview) {
       interview.value = fetchedInterview
+      console.log('Fetched interview data:', interview.value)
+      if (interview.value.documents && Array.isArray(interview.value.documents)) {
+        console.log('Documents loaded:', interview.value.documents.length)
+      } else {
+        console.log('No documents found or documents is not an array')
+        interview.value.documents = []
+      }
     } else {
       console.error('Failed to Load Interview:', 'Interview not found')
       router.push('/interviews')
@@ -393,7 +400,7 @@ onMounted(async () => {
             
             <n-tab-pane name="documents" tab="Documents">
               <div v-if="interview.documents && interview.documents.length > 0">
-                <n-list>
+                <n-list bordered>
                   <n-list-item v-for="document in interview.documents" :key="document.id">
                     <n-thing>
                       <template #avatar>
@@ -407,6 +414,15 @@ onMounted(async () => {
                             {{ document.type.charAt(0).toUpperCase() + document.type.slice(1).replace('_', ' ') }}
                           </n-tag>
                         </n-space>
+                      </template>
+                      
+                      <template #description>
+                        <div v-if="document.size" style="font-size: 12px; color: var(--text-color-secondary);">
+                          Size: {{ (document.size / 1024).toFixed(2) }} KB
+                        </div>
+                        <div v-if="document.createdAt" style="font-size: 12px; color: var(--text-color-secondary);">
+                          Uploaded: {{ formatDate(document.createdAt) }}
+                        </div>
                       </template>
                       
                       <n-button 

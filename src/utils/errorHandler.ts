@@ -42,7 +42,6 @@ export const handleApiError = (error: any, title = 'Error'): void => {
   
   console.error(`[${title}]`, errorMessage, error)
   
-  // Show error notification
   message.error(`${title}: ${errorMessage}`)
 }
 
