@@ -359,6 +359,54 @@ const upcomingWithRemaining = computed(() => {
             </n-timeline>
           </n-card>
 
+          <n-card title="Past Interviews">
+            <template #header-extra>
+              <n-button text @click="navigateTo('interviews')">
+                View All
+              </n-button>
+            </template>
+
+            <div v-if="interviewStore.pastInterviews.length === 0">
+              <n-empty description="No past interviews" />
+            </div>
+
+            <n-timeline v-else>
+              <n-timeline-item
+                v-for="interview in interviewStore.pastInterviews.slice(0, 5)"
+                :key="interview.id"
+                :type="getStatusType(interview.status)"
+                :title="interview.companyName"
+              >
+                <template #icon>
+                  <n-icon><TimeOutline /></n-icon>
+                </template>
+
+                <n-space vertical>
+                  <div>
+                    <strong>{{ interview.position }}</strong>
+                    <n-tag :type="getStatusType(interview.status)" size="small" round style="margin-left: 8px;">
+                      {{ interview.status.charAt(0).toUpperCase() + interview.status.slice(1) }}
+                    </n-tag>
+                  </div>
+
+                  <div>
+                    <n-space>
+                      <span>{{ formatDate(interview.date) }}</span>
+                      <span>{{ formatTime(interview.time) }}</span>
+                      <span>{{ interview.type === 'onsite' ? 'On-site' : interview.type === 'remote' ? 'Remote' : 'Phone' }}</span>
+                    </n-space>
+                  </div>
+
+                  <div>
+                    <n-button text size="small" @click="navigateTo(`interviews/${interview.id}`)">
+                      View Details
+                    </n-button>
+                  </div>
+                </n-space>
+              </n-timeline-item>
+            </n-timeline>
+          </n-card>
+
           <n-card title="Recent Activity">
             <template #header-extra>
               <n-button text @click="navigateTo('interviews')">

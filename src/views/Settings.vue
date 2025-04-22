@@ -35,7 +35,6 @@ import { handleApiError, handleSuccess } from '../utils/errorHandler'
 const isLoading = ref(true)
 const themeStore = useThemeStore()
 
-// Store original settings to use for reset
 const originalSettings = ref({
   theme: {
     primaryColor: '',
@@ -107,7 +106,6 @@ const viewOptions = [
   { label: 'List', value: 'list' }
 ]
 
-// Apply settings immediately in the frontend without saving to backend
 watch(() => userSettings.value.theme.primaryColor, (newColor) => {
   themeStore.setPrimaryColor(newColor)
 }, { deep: true })
@@ -187,7 +185,6 @@ const saveSettings = async () => {
     
     await userSettingsApi.update(settingsRequest)
     
-    // Update original settings after successful save
     originalSettings.value = {
       theme: {
         primaryColor: userSettings.value.theme.primaryColor,
@@ -216,14 +213,14 @@ const saveSettings = async () => {
 
 const resetSettings = () => {
   themeStore.setPrimaryColor(originalSettings.value.theme.primaryColor)
-  
+
   if (themeStore.isDarkMode !== originalSettings.value.theme.isDarkMode) {
     themeStore.toggleDarkMode()
   }
-  
+
   themeStore.setCompactMode(originalSettings.value.display.compactMode)
   themeStore.setDefaultView(originalSettings.value.display.defaultView)
-  
+
   userSettings.value = {
     theme: {
       primaryColor: originalSettings.value.theme.primaryColor
@@ -240,26 +237,24 @@ const resetSettings = () => {
       email: originalSettings.value.profile.email
     }
   }
-  
+
   handleSuccess('Settings reset to original values')
 }
 
 const exportData = async () => {
   try {
     isLoading.value = true
-    
-    const data = await userSettingsApi.exportData()
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const blob = await userSettingsApi.exportData()
     const url = URL.createObjectURL(blob)
-    
     const link = document.createElement('a')
     link.href = url
-    link.download = 'workflowgo-data-export.json'
+    link.download = 'workflowgo-data-export.zip'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    
+
+    URL.revokeObjectURL(url)
+
     handleSuccess('Data exported successfully')
   } catch (error) {
     handleApiError(error, 'Failed to Export Data')
@@ -267,6 +262,7 @@ const exportData = async () => {
     isLoading.value = false
   }
 }
+
 
 </script>
 

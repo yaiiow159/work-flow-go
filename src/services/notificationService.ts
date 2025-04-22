@@ -1,8 +1,9 @@
 import { useMessage } from 'naive-ui'
 import type { Notification } from '../types'
 import { useNotificationsStore } from '../stores/notifications'
-import { useWebSocket, WebSocketMessageType } from './websocket'
+import { useWebSocket } from './websocket'
 import { v4 as uuidv4 } from 'uuid'
+import { WebSocketMessageType} from "../types/websocket-types.ts";
 
 export const useNotificationService = () => {
   const message = useMessage()
@@ -109,9 +110,28 @@ export const useNotificationService = () => {
     }
   }
   
+  const notifyUpcomingInterview = (interview: any) => {
+    try {
+      const reminderLabel = interview.reminderLabel || '1 day'
+      const title = `Interview Reminder: ${interview.companyName}`
+      const message = `${interview.position} interview at ${interview.time} (in ${reminderLabel})`
+      
+      sendNotification({
+        title,
+        message,
+        type: 'info',
+        relatedEntityId: interview.id,
+        relatedEntityType: 'interview'
+      })
+    } catch (error) {
+      console.error('Error sending interview reminder notification:', error)
+    }
+  }
+  
   return {
     showDesktopNotification,
     sendNotification,
-    saveNotificationLocally
+    saveNotificationLocally,
+    notifyUpcomingInterview
   }
 }

@@ -1,18 +1,13 @@
 import { ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { useWebSocket } from './websocket'
 
 const isRunning = ref(false)
 
 export const startInterviewReminderService = () => {
   const authStore = useAuthStore()
-  const { connect } = useWebSocket()
-  
   if (!authStore.isAuthenticated) {
     return
   }
-  
-  connect()
   
   if (isRunning.value) {
     return

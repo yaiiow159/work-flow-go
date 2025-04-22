@@ -80,14 +80,12 @@ onMounted(() => {
       </n-space>
     </n-layout-header>
     
-    <!-- Mobile drawer -->
     <n-drawer v-model:show="showDrawer" placement="left" :width="280">
       <n-drawer-content title="WorkFlowGo" closable>
         <SideNavigation @close-drawer="showDrawer = false" />
       </n-drawer-content>
     </n-drawer>
     
-    <!-- Desktop layout -->
     <n-layout has-sider position="absolute" style="top: 0; bottom: 0; left: 0; right: 0;">
       <n-layout-sider
         bordered
@@ -108,7 +106,6 @@ onMounted(() => {
       </n-layout-sider>
       
       <n-layout>
-        <!-- Use custom TopBar component instead of Naive UI header -->
         <TopBar @toggle-sidebar="toggleSidebar" />
         
         <n-layout-content class="content">

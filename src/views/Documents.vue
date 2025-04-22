@@ -35,6 +35,7 @@ import {
 } from '@vicons/ionicons5'
 import {format} from 'date-fns'
 import {handleApiError, handleSuccess} from '../utils/errorHandler'
+import CloudinaryViewer from '../components/documents/CloudinaryViewer.vue'
 
 const message = useMessage()
 const isLoading = ref(false)
@@ -42,12 +43,14 @@ const documents = ref<Document[]>([])
 
 const showUploadModal = ref(false)
 const showEditModal = ref(false)
+const showPreviewModal = ref(false)
 const uploadFileList = ref<UploadFileInfo[]>([])
 const newDocument = ref({
   name: '',
   type: 'resume'
 })
 const editingDocument = ref<Document | null>(null)
+const previewDocument = ref<Document | null>(null)
 
 const documentTypeOptions = [
   { label: 'Resume', value: 'resume' },
@@ -181,16 +184,10 @@ const downloadDocument = async (doc: Document) => {
 
 const viewDocument = async (doc: Document) => {
   try {
-    isLoading.value = true
-    const viewUrl = await documentsApi.getViewUrl(doc.id)
-    
-    window.open(viewUrl, '_blank')
-    
-    handleSuccess('Document opened for viewing')
+    previewDocument.value = doc
+    showPreviewModal.value = true
   } catch (error) {
     handleApiError(error, 'View Failed')
-  } finally {
-    isLoading.value = false
   }
 }
 
@@ -410,6 +407,48 @@ const columns = [
             <n-button type="primary" @click="saveEditedDocument">Save</n-button>
           </n-space>
         </n-form>
+      </n-modal>
+      
+      <!-- Document Preview Modal -->
+      <n-modal
+        v-model:show="showPreviewModal"
+        preset="card"
+        title="Document Preview"
+        style="width: 90vw; max-width: 1000px; max-height: 90vh;"
+      >
+        <template #header>
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <h3 style="margin: 0;">{{ previewDocument?.name }}</h3>
+            <n-tag :type="previewDocument?.type === 'resume' ? 'success' : previewDocument?.type === 'cover_letter' ? 'info' : previewDocument?.type === 'portfolio' ? 'warning' : 'default'" round size="small">
+              {{ getDocumentTypeLabel(previewDocument?.type || '') }}
+            </n-tag>
+          </div>
+        </template>
+        
+        <div style="min-height: 600px;">
+          <CloudinaryViewer
+            v-if="previewDocument"
+            :document-id="previewDocument.id"
+            :document-url="previewDocument.url"
+            :document-type="previewDocument.type"
+            :content-type="previewDocument.contentType"
+            :get-view-url="documentsApi.getViewUrl"
+            :get-download-url="documentsApi.getDownloadUrl"
+            @download="handleSuccess('Download started')"
+          />
+        </div>
+        
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="showPreviewModal = false">Close</n-button>
+            <n-button type="primary" @click="downloadDocument(previewDocument!)">
+              <template #icon>
+                <n-icon><DownloadOutline /></n-icon>
+              </template>
+              Download
+            </n-button>
+          </n-space>
+        </template>
       </n-modal>
     </div>
   </MainLayout>

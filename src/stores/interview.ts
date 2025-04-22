@@ -9,14 +9,25 @@ export const useInterviewStore = defineStore('interview', () => {
   const error = ref<string | null>(null)
 
   const upcomingInterviews = computed(() => {
+    const now = new Date()
     return interviews.value
-      .filter(interview => interview.status === 'scheduled' || interview.status === 'confirmed')
+      .filter(interview => 
+        (interview.status === 'scheduled' || interview.status === 'confirmed') && 
+        new Date(interview.date) > now
+      )
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   })
 
   const pastInterviews = computed(() => {
+    const now = new Date()
     return interviews.value
-      .filter(interview => interview.status === 'completed' || interview.status === 'rejected' || interview.status === 'cancelled')
+      .filter(interview => 
+        interview.status === 'completed' || 
+        interview.status === 'rejected' || 
+        interview.status === 'cancelled' ||
+        ((interview.status === 'scheduled' || interview.status === 'confirmed') && 
+         new Date(interview.date) <= now)
+      )
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   })
 

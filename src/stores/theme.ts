@@ -104,12 +104,13 @@ export const useThemeStore = defineStore('theme', () => {
     primaryColor,
     compactMode,
     defaultView,
-    theme,
-    themeOverrides,
     initTheme,
     toggleDarkMode,
     setPrimaryColor,
     setCompactMode,
-    setDefaultView
+    setDefaultView,
+    theme,
+    themeOverrides,
+    adjustColor
   }
 })

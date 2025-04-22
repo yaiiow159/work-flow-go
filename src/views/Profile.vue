@@ -69,8 +69,7 @@
               <div class="form-group animate-fade-in" style="animation-delay: 100ms;">
                 <label for="name" class="form-label font-medium text-blue-200">Full Name</label>
                 <div class="relative">
-                  <i class="pi pi-user absolute left-3 top-3 text-blue-400"></i>
-                  <input 
+                  <input
                     id="name"
                     v-model="profileForm.name"
                     type="text" 
@@ -83,8 +82,7 @@
               <div class="form-group animate-fade-in" style="animation-delay: 150ms;">
                 <label for="email" class="form-label font-medium text-blue-200">Email</label>
                 <div class="relative">
-                  <i class="pi pi-envelope absolute left-3 top-3 text-blue-400"></i>
-                  <input 
+                  <input
                     id="email"
                     v-model="profileForm.email"
                     type="email" 
@@ -99,8 +97,7 @@
               <div class="form-group animate-fade-in" style="animation-delay: 200ms;">
                 <label for="phone" class="form-label font-medium text-blue-200">Phone</label>
                 <div class="relative">
-                  <i class="pi pi-phone absolute left-3 top-3 text-blue-400"></i>
-                  <input 
+                  <input
                     id="phone"
                     v-model="profileForm.phone"
                     type="tel" 
@@ -113,8 +110,7 @@
               <div class="form-group animate-fade-in" style="animation-delay: 250ms;">
                 <label for="location" class="form-label font-medium text-blue-200">Location</label>
                 <div class="relative">
-                  <i class="pi pi-map-marker absolute left-3 top-3 text-blue-400"></i>
-                  <input 
+                  <input
                     id="location"
                     v-model="profileForm.location"
                     type="text" 
@@ -127,8 +123,7 @@
               <div class="form-group animate-fade-in" style="animation-delay: 300ms;">
                 <label for="company" class="form-label font-medium text-blue-200">Company</label>
                 <div class="relative">
-                  <i class="pi pi-building absolute left-3 top-3 text-blue-400"></i>
-                  <input 
+                  <input
                     id="company"
                     v-model="profileForm.company"
                     type="text" 
@@ -141,8 +136,7 @@
               <div class="form-group animate-fade-in" style="animation-delay: 350ms;">
                 <label for="position" class="form-label font-medium text-blue-200">Position</label>
                 <div class="relative">
-                  <i class="pi pi-briefcase absolute left-3 top-3 text-blue-400"></i>
-                  <input 
+                  <input
                     id="position"
                     v-model="profileForm.position"
                     type="text" 
@@ -155,8 +149,7 @@
               <div class="form-group md:col-span-2 animate-fade-in" style="animation-delay: 400ms;">
                 <label for="bio" class="form-label font-medium text-blue-200">Bio</label>
                 <div class="relative">
-                  <i class="pi pi-user-edit absolute left-3 top-3 text-blue-400"></i>
-                  <textarea 
+                  <textarea
                     id="bio"
                     v-model="profileForm.bio"
                     class="form-textarea w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
@@ -199,8 +192,8 @@
         <div class="p-6">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3">
             <div>
-              <h3 class="font-medium text-lg text-white">Password</h3>
-              <p class="text-sm text-gray-400">Change your account password</p>
+              <h3 class="text-lg font-medium text-white mb-1">Password</h3>
+              <p class="text-gray-400 text-sm">Update your password to keep your account secure</p>
             </div>
             <button 
               @click="togglePasswordForm" 
@@ -211,8 +204,8 @@
             </button>
           </div>
           
-          <div v-if="showPasswordForm" class="mt-6 p-6 border border-[#2d2d35] rounded-lg bg-[#1e1e24]/50 animate-fade-in">
-            <ChangePasswordForm />
+          <div v-if="showPasswordForm" class="mt-4 border-t border-[#2d2d35] pt-4 animate-fade-in">
+            <ChangePasswordForm @success="showPasswordForm = false" />
           </div>
         </div>
       </div>
@@ -220,47 +213,14 @@
   </div>
 </template>
 
-<style scoped>
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-in-out forwards;
-  opacity: 0;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.6s ease-out forwards;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>
-
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { userApi, userSettingsApi } from '../services/api'
 import type { UserProfileRequest } from '../types'
 import ChangePasswordForm from '../components/user/ChangePasswordForm.vue'
 import { useMessage } from 'naive-ui'
-import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -272,12 +232,12 @@ interface ProfileFormData {
   id?: number | string
   name: string
   email: string
-  photoURL?: string
-  bio?: string
-  phone?: string
-  location?: string
-  company?: string
-  position?: string
+  photoURL: string
+  bio: string
+  phone: string
+  location: string
+  company: string
+  position: string
 }
 
 const profileForm = ref<ProfileFormData>({
@@ -294,6 +254,10 @@ const profileForm = ref<ProfileFormData>({
 const profileImageFile = ref<File | null>(null)
 const profileImagePreview = ref<string | null>(null)
 
+const userPhotoURL = computed(() => {
+  return authStore.user?.photoURL || ''
+})
+
 const userInitials = computed(() => {
   const name = profileForm.value.name || authStore.userDisplayName
   if (!name) return 'U'
@@ -305,19 +269,16 @@ const userInitials = computed(() => {
   return name.substring(0, 2).toUpperCase()
 })
 
-const userPhotoURL = computed(() => profileForm.value.photoURL || authStore.user?.photoURL)
-
-const handleImageChange = (event: Event) => {
+function handleImageChange(event: Event) {
   const input = event.target as HTMLInputElement
-  if (input.files && input.files.length > 0) {
+  if (input.files && input.files[0]) {
     profileImageFile.value = input.files[0]
     profileImagePreview.value = URL.createObjectURL(input.files[0])
   }
 }
 
-const saveProfile = async () => {
+async function saveProfile() {
   isLoading.value = true
-  saveSuccess.value = false
   
   try {
     if (profileImageFile.value) {
@@ -348,7 +309,7 @@ const saveProfile = async () => {
   }
 }
 
-const fetchUserProfile = async () => {
+async function fetchUserProfile() {
   isLoading.value = true
   try {
     const userProfile = await userApi.getUserProfile()
@@ -374,11 +335,11 @@ const fetchUserProfile = async () => {
 
 const showPasswordForm = ref(false)
 
-const togglePasswordForm = () => {
+function togglePasswordForm() {
   showPasswordForm.value = !showPasswordForm.value
 }
 
-const goBack = () => {
+function goBack() {
   router.back()
 }
 
@@ -386,3 +347,51 @@ onMounted(() => {
   fetchUserProfile()
 })
 </script>
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-in-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.form-input, .form-textarea {
+  padding: 0.75rem;
+  transition: all 0.3s;
+}
+
+.form-input:focus, .form-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.3);
+}
+</style>

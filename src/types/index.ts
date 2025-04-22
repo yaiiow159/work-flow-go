@@ -69,14 +69,6 @@ export interface User {
   }
 }
 
-export interface Reminder {
-  id: string
-  interviewId: string
-  time: string
-  message: string
-  isCompleted: boolean
-}
-
 export interface Notification {
   id: string
   userId: string

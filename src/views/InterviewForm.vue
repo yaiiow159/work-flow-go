@@ -396,7 +396,7 @@ onMounted(async () => {
                       <textarea 
                         v-model="formModel.notes" 
                         placeholder="Enter any notes about the interview"
-                        style="width: 100%; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px;"
+                        style="width: 100%; padding: 8px; border: 1px solid; border-radius: 4px;"
                       />
                     </n-form-item>
                   </div>

@@ -1,257 +1,195 @@
-import { ref, onBeforeUnmount } from 'vue'
-import { useNotificationsStore } from '../stores/notifications'
+import { Client } from '@stomp/stompjs'
+import type { Frame, IMessage } from '@stomp/stompjs'
 import { useAuthStore } from '../stores/auth'
+import { useNotificationsStore } from '../stores/notifications'
 import { useMessage } from 'naive-ui'
+import { WebSocketMessageType } from '../types/websocket-types.ts'
+import type { WebSocketMessage } from '../types/websocket-types.ts'
+import { ref, onUnmounted } from 'vue'
 
-const isConnected = ref(false)
-const isConnecting = ref(false)
-const socket = ref<WebSocket | null>(null)
-const reconnectAttempts = ref(0)
-const maxReconnectAttempts = 5
-const reconnectDelay = 3000
+let stompClient: Client | null = null
 
-export enum WebSocketMessageType {
-  NOTIFICATION = 'notification',
-  NOTIFICATION_UPDATE = 'notification_update',
-  NOTIFICATION_READ = 'notification_read',
-  NOTIFICATION_DELETE = 'notification_delete',
-  INTERVIEW_REMINDER = 'interview_reminder',
-  SYSTEM_MESSAGE = 'system_message'
-}
-
-export interface WebSocketMessage {
-  type: WebSocketMessageType;
-  data: any;
-}
-
-const getWebSocketUrl = () => {
-  const baseUrl = import.meta.env.VITE_API_WS_URL || 'ws://localhost:8081/api'
-  return `${baseUrl}/ws`
-}
-
-const connect = () => {
-  const authStore = useAuthStore()
+/**
+ * Vue composable for WebSocket functionality using STOMP
+ * This provides a unified interface for both the raw WebSocket and STOMP client
+ */
+export function useWebSocket() {
+  const isConnected = ref(false)
+  const socket = ref<WebSocket | null>(null)
+  const auth = useAuthStore()
   
-  if (!authStore.isAuthenticated) {
-    console.warn('Cannot connect to WebSocket: User not authenticated')
-    return
-  }
-  
-  if (isConnected.value || isConnecting.value) {
-    return
-  }
-  
-  isConnecting.value = true
-  
-  try {
-    const wsUrl = `${getWebSocketUrl()}?token=${authStore.user?.token || ''}`
-    socket.value = new WebSocket(wsUrl)
-    
-    socket.value.onopen = () => {
-      isConnected.value = true
-      isConnecting.value = false
-      reconnectAttempts.value = 0
-      console.log('WebSocket connection established')
-    }
-    
-    socket.value.onclose = () => {
-      isConnected.value = false
-      isConnecting.value = false
-      
-      if (reconnectAttempts.value < maxReconnectAttempts) {
-        reconnectAttempts.value++
-        setTimeout(connect, reconnectDelay)
-      }
-    }
-    
-    socket.value.onerror = (error) => {
-      console.error('WebSocket error:', error)
-      isConnected.value = false
-      isConnecting.value = false
-    }
-    
-    socket.value.onmessage = handleMessage
-  } catch (error) {
-    console.error('Failed to connect to WebSocket:', error)
-    isConnecting.value = false
-  }
-}
-
-const disconnect = () => {
-  if (socket.value && (isConnected.value || isConnecting.value)) {
-    socket.value.close()
-    socket.value = null
-    isConnected.value = false
-    isConnecting.value = false
-  }
-}
-
-const handleMessage = (event: MessageEvent) => {
-  try {
-    const message: WebSocketMessage = JSON.parse(event.data)
-    const notificationsStore = useNotificationsStore()
-    const messageApi = useMessage()
-    
-    switch (message.type) {
-      case WebSocketMessageType.NOTIFICATION:
-        if (message.data.notification) {
-          notificationsStore.addNotification(message.data.notification)
-          
-          messageApi.info(
-            message.data.notification.title,
-            { duration: 5000, closable: true }
-          )
-          
-          showDesktopNotification(message.data.notification)
-        }
-        break
-      
-      case WebSocketMessageType.NOTIFICATION_UPDATE:
-        notificationsStore.fetchNotifications()
-        break
-        
-      case WebSocketMessageType.NOTIFICATION_READ:
-        if (message.data.id) {
-          notificationsStore.updateNotificationReadStatus(message.data.id, true)
-        } else if (message.data.all) {
-          notificationsStore.updateAllNotificationsReadStatus(true)
-        }
-        break
-        
-      case WebSocketMessageType.NOTIFICATION_DELETE:
-        if (message.data.id) {
-          notificationsStore.removeNotification(message.data.id)
-        }
-        break
-        
-      case WebSocketMessageType.INTERVIEW_REMINDER:
-        if (message.data.interview) {
-          const interview = message.data.interview
-          const title = message.data.title || `Interview Reminder: ${interview.companyName}`
-          const body = message.data.message || `${interview.position} interview at ${interview.time}`
-          
-          messageApi.info(
-            title,
-            { duration: 10000, closable: true }
-          )
-          
-          showDesktopNotification({
-            title: title,
-            message: body,
-            type: 'info'
-          })
-          
-          if (message.data.notification) {
-            notificationsStore.addNotification(message.data.notification)
-          } else {
-            notificationsStore.addNotification({
-              id: message.data.id || crypto.randomUUID(),
-              userId: 'current',
-              title: title,
-              message: body,
-              type: 'info',
-              isRead: false,
-              createdAt: new Date().toISOString(),
-              relatedEntityId: interview.id,
-              relatedEntityType: 'interview'
-            })
-          }
-        }
-        break;
-        
-      case WebSocketMessageType.SYSTEM_MESSAGE:
-        if (message.data.message) {
-          messageApi.info(
-            message.data.title || 'System Message',
-            { duration: 5000, closable: true }
-          )
-        }
-        break;
-        
-      default:
-        console.log('Unknown WebSocket message type:', message.type)
-    }
-  } catch (error) {
-    console.error('Error handling WebSocket message:', error)
-  }
-}
-
-const showDesktopNotification = (notification: { title: string, message: string, type: string }) => {
-  try {
-    if (!('Notification' in window)) {
+  const connect = () => {
+    if (!auth.isAuthenticated) {
+      console.warn('WebSocket: user not authenticated, skip connect')
       return
     }
     
-    if (Notification.permission === 'granted') {
-      new Notification(notification.title, {
-        body: notification.message,
-        icon: '/favicon.ico'
-      })
-    } 
-    else if (Notification.permission !== 'denied') {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          new Notification(notification.title, {
-            body: notification.message,
-            icon: '/favicon.ico'
-          })
-        }
-      })
-    }
-  } catch (error) {
-    console.error('Error showing desktop notification:', error)
-  }
-}
-
-const sendMessage = (type: WebSocketMessageType, data: any) => {
-  if (!isConnected.value || !socket.value) {
-    console.warn('Cannot send message: WebSocket not connected')
-    return false
-  }
-  
-  try {
-    const message: WebSocketMessage = {
-      type,
-      data
+    if (stompClient && stompClient.active) {
+      console.warn('WebSocket: already connected')
+      isConnected.value = true
+      return
     }
     
-    socket.value.send(JSON.stringify(message))
-    return true
-  } catch (error) {
-    console.error('Error sending WebSocket message:', error)
-    return false
+    const wsUrl = `${import.meta.env.VITE_API_WS_URL || 'ws://localhost:8081/api'}/ws?token=${auth.user!.token}`
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const fullUrl = wsUrl.replace(/^https?:/, wsProtocol)
+    
+    stompClient = new Client({
+      brokerURL: fullUrl,
+      debug: str => console.log(`[STOMP] ${str}`),
+      reconnectDelay: 5000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
+      onConnect: (frame: Frame) => {
+        console.log('STOMP: connected', frame)
+        isConnected.value = true
+        socket.value = stompClient?.webSocket as WebSocket
+        stompClient!.subscribe(
+          `/queue/user.${auth.user!.id}`,
+          onMessageReceived
+        )
+      },
+      onStompError: frame => {
+        console.error('STOMP protocol error', frame.headers['message'], frame.body)
+        isConnected.value = false
+      },
+      onDisconnect: () => {
+        isConnected.value = false
+      },
+      onWebSocketClose: () => {
+        console.log('WebSocket connection closed')
+        isConnected.value = false
+      }
+    })
+    
+    stompClient.activate()
   }
-}
-
-const markNotificationAsRead = (id: string) => {
-  return sendMessage(WebSocketMessageType.NOTIFICATION_READ, { id })
-}
-
-const markAllNotificationsAsRead = () => {
-  return sendMessage(WebSocketMessageType.NOTIFICATION_READ, { all: true })
-}
-
-const deleteNotification = (id: string) => {
-  return sendMessage(WebSocketMessageType.NOTIFICATION_DELETE, { id })
-}
-
-window.addEventListener('beforeunload', () => {
-  disconnect()
-})
-
-export const useWebSocket = () => {
-  onBeforeUnmount(() => {
+  
+  const disconnect = () => {
+    if (stompClient) {
+      stompClient.deactivate()
+      stompClient = null
+      isConnected.value = false
+      socket.value = null
+      console.log('WebSocket: disconnected')
+    }
+  }
+  
+  const sendMessage = (type: WebSocketMessageType, data: any): boolean => {
+    if (!stompClient || !stompClient.active) {
+      console.warn('WebSocket: not connected')
+      return false
+    }
+    
+    try {
+      const msg: WebSocketMessage = { type, data }
+      stompClient.publish({
+        destination: `/app/send/user.${auth.user!.id}`,
+        body: JSON.stringify(msg)
+      })
+      return true
+    } catch (e) {
+      console.error('WebSocket: send error', e)
+      return false
+    }
+  }
+  
+  onUnmounted(() => {
     disconnect()
   })
   
   return {
-    isConnected,
-    isConnecting,
     connect,
     disconnect,
     sendMessage,
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
-    deleteNotification
+    isConnected,
+    socket
   }
 }
+
+export function connectStomp(): void {
+  const { connect } = useWebSocket()
+  connect()
+}
+
+function onMessageReceived(msg: IMessage) {
+  try {
+    const payload: WebSocketMessage = JSON.parse(msg.body)
+    const notificationsStore = useNotificationsStore()
+    const notify = useMessage()
+
+    switch (payload.type) {
+      case WebSocketMessageType.NOTIFICATION:
+        if (payload.data.notification) {
+          notificationsStore.addNotification(payload.data.notification)
+          notify.info(payload.data.notification.title, { duration: 5000, closable: true })
+        }
+        break
+
+      case WebSocketMessageType.NOTIFICATION_UPDATE:
+        notificationsStore.fetchNotifications()
+        break
+
+      case WebSocketMessageType.NOTIFICATION_READ:
+        if (payload.data.id) {
+          notificationsStore.updateNotificationReadStatus(payload.data.id, true)
+        } else if (payload.data.all) {
+          notificationsStore.updateAllNotificationsReadStatus(true)
+        }
+        break
+
+      case WebSocketMessageType.NOTIFICATION_DELETE:
+        if (payload.data.id) {
+          notificationsStore.removeNotification(payload.data.id)
+        }
+        break
+
+      case WebSocketMessageType.INTERVIEW_REMINDER:
+        if (payload.data.interview) {
+          const interview = payload.data.interview
+          const title = payload.data.title ??
+              `Interview Reminder: ${interview.companyName}`
+          const body = payload.data.reminderLabel
+              ? `${interview.position} interview at ${interview.time} (in ${payload.data.reminderLabel})`
+              : `${interview.position} interview at ${interview.time}`
+          notify.info(
+              `${title}\n${body}`,
+              {
+                duration: 10000,
+                closable: true
+              }
+          )
+          notificationsStore.addNotification(payload.data.notification)
+        }
+        break
+
+
+      case WebSocketMessageType.SYSTEM_MESSAGE:
+        notify.info(payload.data.title || 'System Message', {
+          duration: 5000,
+          closable: true
+        })
+        break
+
+      default:
+        console.warn('STOMP: unknown message type', payload.type)
+    }
+  } catch (e) {
+    console.error('STOMP: error handling message', e)
+  }
+}
+
+export function sendStompMessage(
+    type: WebSocketMessageType,
+    data: any
+): boolean {
+  const { sendMessage } = useWebSocket()
+  return sendMessage(type, data)
+}
+
+export function disconnectStomp(): void {
+  const { disconnect } = useWebSocket()
+  disconnect()
+}
+
+window.addEventListener('beforeunload', disconnectStomp)

@@ -102,6 +102,25 @@ const userInitials = computed(() => {
   return name.substring(0, 2).toUpperCase()
 })
 
+const primaryColor = computed(() => themeStore.primaryColor)
+
+const adjustColor = (hex: string, percent: number): string => {
+  hex = hex.replace(/^#/, '')
+  
+  const bigint = parseInt(hex, 16)
+  let r = (bigint >> 16) & 255
+  let g = (bigint >> 8) & 255
+  let b = bigint & 255
+  
+  r = Math.min(255, Math.max(0, r + percent))
+  g = Math.min(255, Math.max(0, g + percent))
+  b = Math.min(255, Math.max(0, b + percent))
+  
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
+}
+
+const primaryColorHover = computed(() => adjustColor(primaryColor.value, 10))
+
 onMounted(() => {
   document.addEventListener('click', closeMenus)
   notificationsStore.fetchNotifications().catch(e => {
@@ -118,27 +137,27 @@ onUnmounted(() => {
   <header class="bg-[#18181c] border-b border-[#2d2d35] px-4 py-3">
     <div class="flex justify-between items-center">
       <div class="flex items-center">
-        <button 
-          @click="toggleSidebar" 
+        <button
+          @click="toggleSidebar"
           class="p-2 rounded-md text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200"
         >
           <i class="pi pi-bars" style="font-size: 1.1rem;"></i>
         </button>
-        
+
         <div class="ml-4 hidden md:block">
           <h2 class="text-lg font-medium text-white">{{ currentDate }}</h2>
         </div>
       </div>
-      
+
       <div class="flex items-center space-x-4">
         <router-link
-          to="/interviews/new" 
-          class="btn btn-primary hidden sm:flex items-center px-3 py-1.5 rounded-md bg-[#4a69bd] hover:bg-[#1e3799] text-white transition-colors duration-200"
+          to="/interviews/new"
+          :class="`btn btn-primary hidden sm:flex items-center px-3 py-1.5 rounded-md bg-[${primaryColor}] hover:bg-[${primaryColorHover}] text-white transition-colors duration-200`"
         >
           <i class="pi pi-plus mr-2" style="font-size: 0.9rem;"></i>
           <span>New Interview</span>
         </router-link>
-        
+
         <button
           @click="themeStore.toggleDarkMode"
           class="p-2 rounded-full text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200"
@@ -147,37 +166,37 @@ onUnmounted(() => {
           <i v-if="themeStore.isDarkMode" class="pi pi-sun" style="font-size: 1.1rem;"></i>
           <i v-else class="pi pi-moon" style="font-size: 1.1rem;"></i>
         </button>
-        
+
         <div class="relative">
-          <button 
+          <button
             id="notification-button"
-            @click="toggleNotifications($event)" 
+            @click="toggleNotifications($event)"
             class="p-2 rounded-full text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200 relative"
             aria-label="Toggle notifications"
           >
             <i class="pi pi-bell" style="font-size: 1.1rem;"></i>
-            <span 
-              v-if="notificationsStore.unreadCount > 0" 
+            <span
+              v-if="notificationsStore.unreadCount > 0"
               class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"
             ></span>
           </button>
-          
+
           <div
             id="notification-menu"
-            v-show="showNotifications" 
+            v-show="showNotifications"
             class="absolute right-0 mt-2 w-80 bg-[#18181c] rounded-md shadow-lg z-10 overflow-hidden border border-[#2d2d35]"
           >
             <div class="p-3 border-b border-[#2d2d35] flex justify-between items-center">
               <h3 class="font-medium text-white">Notifications</h3>
-              <span v-if="notificationsStore.unreadCount > 0" class="text-xs bg-[#4a69bd] text-white px-2 py-0.5 rounded-full">
+              <span v-if="notificationsStore.unreadCount > 0" :class="`text-xs bg-[${primaryColor}] text-white px-2 py-0.5 rounded-full`">
                 {{ notificationsStore.unreadCount }}
               </span>
             </div>
-            
+
             <div class="max-h-96 overflow-y-auto">
               <template v-if="notificationsStore.notifications.length > 0">
                 <NotificationItem
-                  v-for="notification in notificationsStore.notifications" 
+                  v-for="notification in notificationsStore.notifications"
                   :key="notification.id"
                   :notification="notification"
                   @mark-as-read="handleMarkAsRead"
@@ -188,11 +207,11 @@ onUnmounted(() => {
                 No notifications
               </div>
             </div>
-            
+
             <div v-if="notificationsStore.notifications.length > 0" class="p-2 border-t border-[#2d2d35] text-center">
-              <button 
+              <button
                 @click="handleMarkAllAsRead"
-                class="text-sm text-[#4a69bd] hover:text-[#6a89cc]"
+                :class="`text-sm text-[${primaryColor}] hover:text-[${primaryColorHover}]`"
               >
                 Mark all as read
               </button>
