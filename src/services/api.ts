@@ -96,7 +96,8 @@ export const documentsApi = {
   
   getDownloadUrl: async (id: string) => {
     try {
-      return `/documents/${id}/download`
+      const baseURL = import.meta.env.VITE_API_URL || '';
+      return `${baseURL}/documents/${id}/download?t=${Date.now()}`
     } catch (error) {
       console.error('Error getting download URL:', error)
       throw error
@@ -105,7 +106,8 @@ export const documentsApi = {
   
   getViewUrl: async (id: string) => {
     try {
-      return `/documents/${id}/view`
+      const baseURL = import.meta.env.VITE_API_URL || '';
+      return `${baseURL}/documents/${id}/view?t=${Date.now()}`
     } catch (error) {
       console.error('Error getting view URL:', error)
       throw error
@@ -130,6 +132,27 @@ export const documentsApi = {
         const filenameMatch = contentDisposition.match(/filename="(.+)"/)
         if (filenameMatch && filenameMatch[1]) {
           filename = filenameMatch[1]
+        }
+      }
+      
+      const contentType = response.headers['content-type']
+      if (contentType && !filename.includes('.')) {
+        const extension = contentType.split('/')[1]
+        if (extension) {
+          const extensionMap: Record<string, string> = {
+            'png': 'png',
+            'jpeg': 'jpg',
+            'jpg': 'jpg',
+            'pdf': 'pdf',
+            'plain': 'txt',
+            'msword': 'doc',
+            'vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+            'vnd.ms-excel': 'xls',
+            'vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'
+          }
+          
+          const mappedExtension = extensionMap[extension] || extension
+          filename = `${filename}.${mappedExtension}`
         }
       }
       

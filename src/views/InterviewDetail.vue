@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useInterviewStore } from '../stores/interview'
 import MainLayout from '../components/layout/MainLayout.vue'
 import { format } from 'date-fns'
-import type { Interview } from '../types'
+import type { Interview, InterviewStatus } from '../types'
 import { 
   NCard, 
   NSpace, 
@@ -41,6 +41,9 @@ import {
   StarOutline,
   ChatbubbleOutline
 } from '@vicons/ionicons5'
+import { documentsApi } from '../services/api'
+import { handleApiError, handleSuccess } from '../utils/errorHandler'
+import DocumentViewer from '../components/documents/DocumentViewer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,6 +52,8 @@ const message = useMessage()
 
 const isLoading = ref(true)
 const interview = ref<Interview | null>(null)
+const showDocumentModal = ref(false)
+const previewDocument = ref<any>(null)
 const interviewId = computed(() => route.params.id as string)
 
 const formatDate = (dateString: string) => {
@@ -93,18 +98,50 @@ const deleteInterview = async () => {
 }
 
 const updateStatus = async (newStatus: string) => {
-  if (!interview.value) return
-  
   try {
-    const updatedInterview = await interviewStore.updateInterviewStatus(interview.value.id, newStatus as any)
-    if (updatedInterview) {
-      interview.value = updatedInterview
-      message.success('Status updated successfully')
-    } else if (interviewStore.error) {
-      console.error('Status Update Failed:', interviewStore.error)
+    await interviewStore.updateInterviewStatus(interviewId.value, newStatus as InterviewStatus)
+    if (interview.value) {
+      interview.value.status = newStatus as InterviewStatus;
     }
-  } catch (err) {
-    console.error('Status Update Failed:', err)
+    message.success(`Interview status updated to ${newStatus}`)
+  } catch (error) {
+    console.error('Error updating status:', error)
+    message.error('Failed to update interview status')
+  }
+}
+
+const viewDocument = async (document: any) => {
+  try {
+    if (document && document.id) {
+      let documentId = document.id.toString();
+      
+      if (typeof documentId === 'string' && documentId.includes('_')) {
+        const idParts = documentId.split('_');
+        if (idParts.length > 0) {
+          documentId = idParts[0];
+        }
+      }
+      
+      const numericId = parseInt(documentId, 10);
+      if (isNaN(numericId)) {
+        throw new Error('Invalid document ID format');
+      }
+      
+      const viewUrl = await documentsApi.getViewUrl(numericId.toString());
+      
+      previewDocument.value = {
+        ...document,
+        id: documentId,
+        url: viewUrl
+      };
+      
+      showDocumentModal.value = true;
+    } else {
+      message.error('Invalid document');
+    }
+  } catch (error) {
+    console.error('View document error:', error);
+    handleApiError(error, 'View Failed');
   }
 }
 
@@ -427,9 +464,7 @@ onMounted(async () => {
                       
                       <n-button 
                         size="small" 
-                        tag="a" 
-                        :href="document.url" 
-                        target="_blank"
+                        @click="viewDocument(document)"
                         style="margin-top: 8px;"
                       >
                         View Document
@@ -444,6 +479,41 @@ onMounted(async () => {
         </template>
       </n-space>
     </div>
+    
+    <n-modal
+      v-model:show="showDocumentModal"
+      preset="card"
+      style="width: 90%; max-width: 1000px;"
+      title="Document Preview"
+    >
+      <template #header>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <h3 style="margin: 0;">{{ previewDocument?.name }}</h3>
+          <n-tag :type="previewDocument?.type === 'resume' ? 'success' : previewDocument?.type === 'cover_letter' ? 'info' : previewDocument?.type === 'portfolio' ? 'warning' : 'default'" round size="small">
+            {{ previewDocument?.type.charAt(0).toUpperCase() + previewDocument?.type.slice(1).replace('_', ' ') }}
+          </n-tag>
+        </div>
+      </template>
+      
+      <div style="min-height: 600px;">
+        <DocumentViewer
+          v-if="previewDocument"
+          :document-id="previewDocument.id"
+          :document-url="previewDocument.url"
+          :document-type="previewDocument.type"
+          :content-type="previewDocument.contentType"
+          :get-view-url="documentsApi.getViewUrl"
+          :get-download-url="documentsApi.getDownloadUrl"
+          @download="handleSuccess('Download started')"
+        />
+      </div>
+      
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showDocumentModal = false">Close</n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </MainLayout>
 </template>
 

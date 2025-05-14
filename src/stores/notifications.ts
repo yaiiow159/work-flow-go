@@ -108,8 +108,6 @@ export const useNotificationsStore = defineStore('notifications', () => {
     const success = await withLoading(() => notificationsApi.delete(id), false)
     if (success) {
       removeNotification(id)
-
-      // Send WebSocket notification to update other clients
       const { sendMessage, isConnected } = useWebSocket()
       if (isConnected.value) {
         sendMessage(WebSocketMessageType.NOTIFICATION_DELETE, { id })

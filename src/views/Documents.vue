@@ -162,35 +162,61 @@ const deleteDocument = async (id: string) => {
 
 const downloadDocument = async (doc: Document) => {
   try {
-    isLoading.value = true
+    if (!doc || !doc.id) {
+      message.error('Invalid document')
+      return
+    }
     
-    await documentsApi.downloadFile(doc.id)
+    let documentId = doc.id;
+    if (typeof documentId === 'string' && documentId.includes('_')) {
+      const idParts = documentId.split('_');
+      if (idParts.length > 0) {
+        documentId = idParts[0];
+      }
+    }
     
+    const numericId = parseInt(String(documentId), 10);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid document ID format');
+    }
+    
+    await documentsApi.downloadFile(numericId.toString())
     handleSuccess('Download started')
   } catch (error) {
     handleApiError(error, 'Download Failed')
-  } finally {
-    isLoading.value = false
   }
 }
 
 const viewDocument = async (doc: Document) => {
   try {
     if (doc.id) {
-      const viewUrl = await documentsApi.getViewUrl(doc.id)
+      let documentId = doc.id;
+      if (typeof documentId === 'string' && documentId.includes('_')) {
+        const idParts = documentId.split('_');
+        if (idParts.length > 0) {
+          documentId = idParts[0];
+        }
+      }
       
-      // Update the document with the fresh URL
+      const numericId = parseInt(String(documentId), 10);
+      if (isNaN(numericId)) {
+        throw new Error('Invalid document ID format');
+      }
+      
+      const downloadUrl = await documentsApi.getDownloadUrl(numericId.toString());
+      
       previewDocument.value = {
         ...doc,
-        url: viewUrl
-      }
+        id: documentId,
+        url: downloadUrl
+      };
     } else {
-      previewDocument.value = doc
+      previewDocument.value = doc;
     }
     
-    showPreviewModal.value = true
+    showPreviewModal.value = true;
   } catch (error) {
-    handleApiError(error, 'View Failed')
+    handleApiError(error, 'View Failed');
   }
 }
 
@@ -412,7 +438,6 @@ const columns = [
         </n-form>
       </n-modal>
       
-      <!-- Document Preview Modal -->
       <n-modal
         v-model:show="showPreviewModal"
         preset="card"

@@ -19,7 +19,6 @@ const themeStore = useThemeStore()
 const authStore = useAuthStore()
 const { connect, disconnect } = useWebSocket()
 
-// Compute the current theme based on the isDarkMode state
 const currentTheme = computed(() => themeStore.isDarkMode ? darkTheme : lightTheme)
 
 watch(() => authStore.isAuthenticated, (isAuthenticated) => {

@@ -10,6 +10,15 @@
         </template>
       </n-result>
     </div>
+    <div v-else-if="documentUrl" class="document-container">
+      <iframe 
+        :src="documentUrl" 
+        class="document-iframe"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-downloads"
+        referrerpolicy="no-referrer"
+        allow="fullscreen"
+      ></iframe>
+    </div>
     <div v-else class="document-container">
       <n-result title="Document Ready">
         <template #icon>
@@ -68,16 +77,28 @@ const emit = defineEmits(['close', 'download'])
 
 const loading = ref(true)
 const error = ref('')
+const documentUrl = ref('')
 
 const downloadDocument = async () => {
   try {
-    const downloadUrl = await props.getDownloadUrl(props.documentId)
-    
-    let fullUrl = downloadUrl;
-    if (downloadUrl.startsWith('/')) {
-      const baseURL = import.meta.env.VITE_API_URL || '';
-      fullUrl = `${baseURL}${downloadUrl}`;
+    let documentId = props.documentId;
+    // Check if documentId is a string before using string methods
+    if (typeof documentId === 'string' && documentId.includes('_')) {
+      const idParts = documentId.split('_');
+      if (idParts.length > 0) {
+        documentId = idParts[0];
+      }
     }
+    
+    // Ensure we have a valid numeric ID
+    const numericId = parseInt(String(documentId), 10);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid document ID format');
+    }
+    
+    const downloadUrl = await props.getDownloadUrl(numericId.toString())
+    
+    const fullUrl = downloadUrl;
     
     const response = await fetch(fullUrl)
     const blob = await response.blob()
@@ -99,25 +120,54 @@ const downloadDocument = async () => {
     link.setAttribute('download', filename)
     document.body.appendChild(link)
     link.click()
-    
-    window.URL.revokeObjectURL(url)
     document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
     
     emit('download')
-  } catch (e) {
-    console.error('Error downloading document:', e)
-    error.value = 'Failed to download document. Please try again.'
+  } catch (err) {
+    console.error('Download error:', err)
+    error.value = err instanceof Error ? err.message : 'Failed to download document'
   }
 }
 
-const retry = () => {
-  loading.value = false
+const retry = async () => {
   error.value = ''
+  loading.value = true
+  await loadDocument()
+}
+
+const loadDocument = async () => {
+  try {
+    if (props.documentUrl) {
+      documentUrl.value = '';
+      await downloadDocument();
+    } else if (props.documentId) {
+      let documentId = props.documentId;
+      if (typeof documentId === 'string' && documentId.includes('_')) {
+        const idParts = documentId.split('_');
+        if (idParts.length > 0) {
+          documentId = idParts[0];
+        }
+      }
+      
+      const numericId = parseInt(String(documentId), 10);
+      if (isNaN(numericId)) {
+        throw new Error('Invalid document ID format');
+      }
+      
+      await downloadDocument();
+      documentUrl.value = '';
+    }
+  } catch (err) {
+    console.error('Error loading document:', err)
+    error.value = err instanceof Error ? err.message : 'Failed to load document'
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
-  // Just set loading to false since we're not actually loading a preview
-  loading.value = false
+  loadDocument()
 })
 </script>
 
@@ -125,24 +175,25 @@ onMounted(() => {
 .document-viewer {
   width: 100%;
   height: 100%;
-  min-height: 400px;
+  min-height: 600px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
 .loading-container,
 .error-container,
 .document-container {
-  width: 100%;
-  height: 100%;
+  flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  min-height: 400px;
 }
 
-.document-container {
-  padding: 1rem;
+.document-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  border: none;
 }
 </style>

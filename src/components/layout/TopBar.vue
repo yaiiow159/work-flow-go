@@ -159,8 +159,7 @@ onUnmounted(() => {
       </div>
       
       <div class="flex items-center space-x-4">
-        <!-- New Interview Button -->
-        <a 
+        <a
           href="/interviews/new"
           :style="{
             display: 'flex',

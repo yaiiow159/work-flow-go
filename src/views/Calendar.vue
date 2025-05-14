@@ -110,7 +110,6 @@ onMounted(async () => {
   <MainLayout>
     <div class="page-container">
       <n-space vertical size="large">
-        <!-- Header -->
         <n-space justify="space-between" align="center">
           <div>
             <h1 style="margin-bottom: 4px;">Calendar</h1>
