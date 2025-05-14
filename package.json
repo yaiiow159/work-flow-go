@@ -15,7 +15,6 @@
     "preview:prod": "vite preview --mode production"
   },
   "dependencies": {
-    "@cloudinary/url-gen": "^1.21.0",
     "@stomp/stompjs": "^7.1.1",
     "@types/uuid": "^10.0.0",
     "@vicons/ionicons5": "^0.12.0",

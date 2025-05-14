@@ -1,215 +1,128 @@
 <template>
-  <div class="container mx-auto py-8 px-4">
-    <div class="max-w-4xl mx-auto">
-      <div class="flex justify-between items-center mb-8">
-        <button 
-          @click="goBack" 
-          class="text-blue-400 hover:text-blue-300 flex items-center group transition-all duration-300 hover:scale-105"
-        >
-          <i class="pi pi-arrow-left mr-2 transition-transform duration-300 group-hover:-translate-x-1"></i>
-          Back
-        </button>
-        <h1 class="text-3xl font-bold text-center text-white animate-fade-in">Profile</h1>
-        <div class="w-16"></div>
-      </div>
-      
-      <div class="bg-[#18181c] rounded-lg shadow-xl overflow-hidden mb-8 animate-slide-up">
-        <div class="bg-gradient-to-r from-[#0c2461]/90 to-[#1e3799]/90 p-8">
-          <div class="flex flex-col md:flex-row items-center">
-            <div class="relative mb-6 md:mb-0 md:mr-8 animate-fade-in">
-              <div v-if="profileImagePreview || userPhotoURL" class="w-32 h-32 rounded-full overflow-hidden border-4 border-[#4a69bd] shadow-lg hover:scale-105 transition-transform duration-300">
-                <img 
-                  :src="profileImagePreview || userPhotoURL" 
-                  alt="Profile" 
-                  class="w-full h-full object-cover"
-                />
-              </div>
-              <div 
-                v-else 
-                class="w-32 h-32 rounded-full bg-gradient-to-br from-[#4a69bd] to-[#0c2461] flex items-center justify-center text-white border-4 border-[#4a69bd] shadow-lg hover:scale-105 transition-transform duration-300"
-              >
-                <span class="text-3xl font-medium">{{ userInitials }}</span>
-              </div>
-              
-              <label class="absolute bottom-0 right-0 bg-[#4a69bd] rounded-full p-2 shadow-lg cursor-pointer hover:bg-[#6a89cc] transition-all duration-300 hover:scale-110">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  class="hidden" 
-                  @change="handleImageChange"
-                />
-                <i class="pi pi-camera text-white"></i>
-              </label>
-            </div>
-            
-            <div class="text-center md:text-left flex-1 animate-fade-in">
-              <h2 class="text-2xl font-bold mb-1 text-white">{{ profileForm.name || authStore.userDisplayName }}</h2>
-              <p class="text-blue-200 mb-4">{{ profileForm.email || authStore.user?.email }}</p>
-              <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-3">
-                <div v-if="profileForm.position" class="inline-flex items-center px-3 py-1 bg-[#0c2461]/50 text-blue-200 rounded-full text-sm shadow-md border border-[#4a69bd]/50 hover:bg-[#1e3799]/50 transition-colors duration-300">
-                  <i class="pi pi-briefcase mr-1 text-blue-300"></i>
-                  {{ profileForm.position }}
-                </div>
-                <div v-if="profileForm.company" class="inline-flex items-center px-3 py-1 bg-[#1e3799]/50 text-blue-200 rounded-full text-sm shadow-md border border-[#4a69bd]/50 hover:bg-[#0c2461]/50 transition-colors duration-300">
-                  <i class="pi pi-building mr-1 text-blue-300"></i>
-                  {{ profileForm.company }}
-                </div>
-                <div v-if="profileForm.location" class="inline-flex items-center px-3 py-1 bg-[#0c2461]/50 text-blue-200 rounded-full text-sm shadow-md border border-[#4a69bd]/50 hover:bg-[#1e3799]/50 transition-colors duration-300">
-                  <i class="pi pi-map-marker mr-1 text-blue-300"></i>
-                  {{ profileForm.location }}
-                </div>
-              </div>
-            </div>
+  <div class="profile-container">
+    <div class="header-section">
+      <n-button @click="goBack" text>
+        <i class="pi pi-arrow-left mr-2"></i> Back
+      </n-button>
+      <h1 class="page-title">Profile</h1>
+    </div>
+
+    <n-card class="profile-card">
+      <div class="profile-header">
+        <div class="profile-image-container">
+          <div v-if="profileImagePreview" class="profile-image">
+            <img :src="profileImagePreview" alt="Profile" class="profile-img" />
           </div>
+          <div v-else-if="userPhotoURL" class="profile-image">
+            <img :src="userPhotoURL" alt="Profile" class="profile-img" />
+          </div>
+          <div v-else class="profile-initials">
+            {{ userInitials }}
+          </div>
+          <label class="camera-button">
+            <input type="file" accept="image/*" @change="handleImageChange" class="hidden" />
+            <i class="pi pi-camera"></i>
+          </label>
         </div>
-        
-        <div class="p-8 bg-[#18181c]">
-          <form @submit.prevent="saveProfile">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="form-group animate-fade-in" style="animation-delay: 100ms;">
-                <label for="name" class="form-label font-medium text-blue-200">Full Name</label>
-                <div class="relative">
-                  <input
-                    id="name"
-                    v-model="profileForm.name"
-                    type="text" 
-                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
-                    placeholder="Your full name"
-                  />
-                </div>
-              </div>
-              
-              <div class="form-group animate-fade-in" style="animation-delay: 150ms;">
-                <label for="email" class="form-label font-medium text-blue-200">Email</label>
-                <div class="relative">
-                  <input
-                    id="email"
-                    v-model="profileForm.email"
-                    type="email" 
-                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md opacity-80"
-                    placeholder="Your email"
-                    disabled
-                  />
-                </div>
-                <small class="text-gray-400 mt-1 inline-block">Email cannot be changed</small>
-              </div>
-              
-              <div class="form-group animate-fade-in" style="animation-delay: 200ms;">
-                <label for="phone" class="form-label font-medium text-blue-200">Phone</label>
-                <div class="relative">
-                  <input
-                    id="phone"
-                    v-model="profileForm.phone"
-                    type="tel" 
-                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
-                    placeholder="Your phone number"
-                  />
-                </div>
-              </div>
-              
-              <div class="form-group animate-fade-in" style="animation-delay: 250ms;">
-                <label for="location" class="form-label font-medium text-blue-200">Location</label>
-                <div class="relative">
-                  <input
-                    id="location"
-                    v-model="profileForm.location"
-                    type="text" 
-                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
-                    placeholder="Your location"
-                  />
-                </div>
-              </div>
-              
-              <div class="form-group animate-fade-in" style="animation-delay: 300ms;">
-                <label for="company" class="form-label font-medium text-blue-200">Company</label>
-                <div class="relative">
-                  <input
-                    id="company"
-                    v-model="profileForm.company"
-                    type="text" 
-                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
-                    placeholder="Your company"
-                  />
-                </div>
-              </div>
-              
-              <div class="form-group animate-fade-in" style="animation-delay: 350ms;">
-                <label for="position" class="form-label font-medium text-blue-200">Position</label>
-                <div class="relative">
-                  <input
-                    id="position"
-                    v-model="profileForm.position"
-                    type="text" 
-                    class="form-input w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
-                    placeholder="Your position"
-                  />
-                </div>
-              </div>
-              
-              <div class="form-group md:col-span-2 animate-fade-in" style="animation-delay: 400ms;">
-                <label for="bio" class="form-label font-medium text-blue-200">Bio</label>
-                <div class="relative">
-                  <textarea
-                    id="bio"
-                    v-model="profileForm.bio"
-                    class="form-textarea w-full pl-10 bg-[#1e1e24] border border-[#2d2d35] text-white focus:border-[#4a69bd] focus:ring-2 focus:ring-[#4a69bd]/50 rounded-md shadow-md"
-                    rows="4"
-                    placeholder="Tell us about yourself"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-            
-            <div class="mt-8 flex flex-col sm:flex-row items-center justify-between animate-fade-in" style="animation-delay: 450ms;">
-              <button 
-                type="submit" 
-                class="btn bg-gradient-to-r from-[#1e3799] to-[#4a69bd] hover:from-[#0c2461] hover:to-[#1e3799] text-white font-medium py-2 px-6 rounded-md shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto mb-4 sm:mb-0 focus:outline-none focus:ring-2 focus:ring-[#4a69bd]/50 hover:scale-105"
-                :disabled="isLoading"
-              >
-                <i v-if="isLoading" class="pi pi-spin pi-spinner mr-2"></i>
-                <i v-else class="pi pi-save mr-2"></i>
-                <span>Save Profile</span>
-              </button>
-              
-              <div>
-                <span v-if="saveSuccess" class="text-green-400 flex items-center animate-pulse">
-                  <i class="pi pi-check-circle mr-1"></i> Profile updated successfully
-                </span>
-              </div>
-            </div>
-          </form>
+        <div class="profile-info">
+          <h2 class="profile-name">{{ profileForm.name || authStore.userDisplayName }}</h2>
+          <p class="profile-email">{{ profileForm.email || authStore.user?.email }}</p>
         </div>
       </div>
-      
-      <div class="bg-[#18181c] rounded-lg shadow-xl overflow-hidden animate-slide-up" style="animation-delay: 200ms;">
-        <div class="p-6 border-b border-[#2d2d35] bg-gradient-to-r from-[#0c2461]/90 to-[#1e3799]/90">
-          <h2 class="text-xl font-bold flex items-center text-white">
-            <i class="pi pi-shield mr-2 text-blue-400"></i>
-            Account Security
-          </h2>
-        </div>
-        
-        <div class="p-6">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3">
-            <div>
-              <h3 class="text-lg font-medium text-white mb-1">Password</h3>
-              <p class="text-gray-400 text-sm">Update your password to keep your account secure</p>
+
+      <div class="profile-form">
+        <n-form>
+          <div class="form-grid">
+            <div class="form-group">
+              <n-form-item label="Full Name">
+                <n-input v-model:value="profileForm.name" placeholder="Your full name" />
+              </n-form-item>
             </div>
-            <button 
-              @click="togglePasswordForm" 
-              class="btn mt-3 sm:mt-0 border border-[#4a69bd] text-blue-300 hover:bg-[#0c2461]/50 font-medium py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-[#4a69bd]/50 transition-all duration-300 hover:scale-105"
-            >
-              <i class="pi pi-lock mr-2"></i>
-              {{ showPasswordForm ? 'Cancel' : 'Change Password' }}
-            </button>
+            
+            <div class="form-group">
+              <n-form-item label="Email">
+                <n-input v-model:value="profileForm.email" placeholder="Your email" disabled />
+                <template #help>
+                  <small class="form-help">Email cannot be changed</small>
+                </template>
+              </n-form-item>
+            </div>
+            
+            <div class="form-group">
+              <n-form-item label="Phone">
+                <n-input v-model:value="profileForm.phone" placeholder="Your phone number" />
+              </n-form-item>
+            </div>
+            
+            <div class="form-group">
+              <n-form-item label="Location">
+                <n-input v-model:value="profileForm.location" placeholder="Your location" />
+              </n-form-item>
+            </div>
+            
+            <div class="form-group">
+              <n-form-item label="Company">
+                <n-input v-model:value="profileForm.company" placeholder="Your company" />
+              </n-form-item>
+            </div>
+            
+            <div class="form-group">
+              <n-form-item label="Position">
+                <n-input v-model:value="profileForm.position" placeholder="Your position" />
+              </n-form-item>
+            </div>
+            
+            <div class="form-group full-width">
+              <n-form-item label="Bio">
+                <n-input 
+                  v-model:value="profileForm.bio" 
+                  type="textarea" 
+                  placeholder="Tell us about yourself"
+                  :autosize="{ minRows: 3, maxRows: 5 }"
+                />
+              </n-form-item>
+            </div>
           </div>
           
-          <div v-if="showPasswordForm" class="mt-4 border-t border-[#2d2d35] pt-4 animate-fade-in">
-            <ChangePasswordForm @success="showPasswordForm = false" />
+          <div class="form-actions">
+            <n-button 
+              type="primary" 
+              @click="saveProfile" 
+              :loading="isLoading"
+            >
+              <template #icon>
+                <i class="pi pi-save"></i>
+              </template>
+              Save Profile
+            </n-button>
+            <span v-if="saveSuccess" class="success-message">
+              <i class="pi pi-check-circle mr-1"></i> Profile updated successfully
+            </span>
           </div>
-        </div>
+        </n-form>
       </div>
-    </div>
+    </n-card>
+
+    <n-card class="password-card">
+      <div class="password-header">
+        <i class="pi pi-shield mr-2"></i> Password
+      </div>
+      <div class="password-content">
+        <p class="password-description">Update your password to keep your account secure</p>
+        <n-button 
+          type="primary" 
+          @click="togglePasswordForm"
+        >
+          <template #icon>
+            <i class="pi pi-lock"></i>
+          </template>
+          {{ showPasswordForm ? 'Cancel' : 'Change Password' }}
+        </n-button>
+      </div>
+      <div v-if="showPasswordForm" class="password-form-container">
+        <ChangePasswordForm @success="showPasswordForm = false" />
+      </div>
+    </n-card>
   </div>
 </template>
 
@@ -217,63 +130,82 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { userApi, userSettingsApi } from '../services/api'
-import type { UserProfileRequest } from '../types'
+import { userSettingsApi } from '../services/api'
+import { 
+  useMessage, 
+  NButton, 
+  NCard, 
+  NForm, 
+  NFormItem, 
+  NInput 
+} from 'naive-ui'
 import ChangePasswordForm from '../components/user/ChangePasswordForm.vue'
-import { useMessage } from 'naive-ui'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const message = useMessage()
 const isLoading = ref(false)
 const saveSuccess = ref(false)
-
-interface ProfileFormData {
-  id?: number | string
-  name: string
-  email: string
-  photoURL: string
-  bio: string
-  phone: string
-  location: string
-  company: string
-  position: string
-}
-
-const profileForm = ref<ProfileFormData>({
-  name: '',
-  email: '',
-  photoURL: '',
-  bio: '',
-  phone: '',
-  location: '',
-  company: '',
-  position: ''
-})
-
 const profileImageFile = ref<File | null>(null)
 const profileImagePreview = ref<string | null>(null)
 
+interface ProfileFormData {
+  id: string;
+  name: string;
+  email: string;
+  photoURL: string;
+  phone: string;
+  location: string;
+  company: string;
+  position: string;
+  bio: string;
+}
+
+const profileForm = ref<ProfileFormData>({
+  id: '',
+  name: '',
+  email: '',
+  photoURL: '',
+  phone: '',
+  location: '',
+  company: '',
+  position: '',
+  bio: ''
+})
+
 const userPhotoURL = computed(() => {
-  return authStore.user?.photoURL || ''
+  if (!authStore.user) return null
+  
+  if (authStore.user.photoURL) {
+    return authStore.user.photoURL
+  }
+  
+  return null
 })
 
 const userInitials = computed(() => {
-  const name = profileForm.value.name || authStore.userDisplayName
-  if (!name) return 'U'
+  if (!profileForm.value.name && !authStore.userDisplayName) return '?'
   
+  const name = profileForm.value.name || authStore.userDisplayName
   const parts = name.split(' ')
-  if (parts.length > 1) {
+  
+  if (parts.length >= 2) {
     return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
   }
+  
   return name.substring(0, 2).toUpperCase()
 })
 
 function handleImageChange(event: Event) {
   const input = event.target as HTMLInputElement
-  if (input.files && input.files[0]) {
+  if (input.files && input.files.length > 0) {
     profileImageFile.value = input.files[0]
-    profileImagePreview.value = URL.createObjectURL(input.files[0])
+    
+    if (profileImagePreview.value) {
+      URL.revokeObjectURL(profileImagePreview.value)
+    }
+    
+    profileImagePreview.value = URL.createObjectURL(profileImageFile.value)
   }
 }
 
@@ -282,28 +214,46 @@ async function saveProfile() {
   
   try {
     if (profileImageFile.value) {
-      await userSettingsApi.uploadProfileImage(profileImageFile.value)
+      const result = await userSettingsApi.uploadProfileImage(profileImageFile.value)
+      
+      if (result.success) {
+        if (authStore.user) {
+          authStore.user.photoURL = result.photoURL || authStore.user.photoURL
+          localStorage.setItem('user', JSON.stringify(authStore.user))
+        }
+        
+        profileForm.value.photoURL = result.photoURL || profileForm.value.photoURL
+        profileImagePreview.value = null
+      } else {
+        throw new Error(result.error || 'Failed to upload profile image')
+      }
+      
+      profileImageFile.value = null
     }
     
-    const profileRequest: UserProfileRequest = {
+    const profileRequest = {
+      id: profileForm.value.id,
       name: profileForm.value.name,
-      email: profileForm.value.email,
-      bio: profileForm.value.bio,
+      photoURL: profileForm.value.photoURL,
       phone: profileForm.value.phone,
       location: profileForm.value.location,
       company: profileForm.value.company,
-      position: profileForm.value.position
+      position: profileForm.value.position,
+      bio: profileForm.value.bio
     }
     
-    await userApi.updateUserProfile(profileRequest)
+    await userSettingsApi.updateUserProfile(profileRequest)
     saveSuccess.value = true
     message.success('Profile updated successfully')
+    
+    await authStore.initAuth()
+    
     setTimeout(() => {
       saveSuccess.value = false
     }, 3000)
-  } catch (error: any) {
-    console.error('Profile Update Failed:', error)
-    message.error('Failed to update profile')
+  } catch (error) {
+    console.error('Error saving profile:', error)
+    message.error('Failed to save profile')
   } finally {
     isLoading.value = false
   }
@@ -312,21 +262,21 @@ async function saveProfile() {
 async function fetchUserProfile() {
   isLoading.value = true
   try {
-    const userProfile = await userApi.getUserProfile()
+    const userProfile = await userSettingsApi.getUserProfile()
     
     profileForm.value = {
-      id: userProfile.id,
+      id: String(userProfile.id),
       name: userProfile.name || '',
       email: userProfile.email || '',
       photoURL: userProfile.photoURL || '',
-      bio: userProfile.bio || '',
       phone: userProfile.phone || '',
       location: userProfile.location || '',
       company: userProfile.company || '',
-      position: userProfile.position || ''
+      position: userProfile.position || '',
+      bio: userProfile.bio || ''
     }
-  } catch (error: any) {
-    console.error('Failed to Load Profile:', error)
+  } catch (error) {
+    console.error('Error fetching user profile:', error)
     message.error('Failed to load profile')
   } finally {
     isLoading.value = false
@@ -349,49 +299,182 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-in-out forwards;
-  opacity: 0;
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.animate-slide-up {
-  animation: slideUp 0.5s ease-out forwards;
-  opacity: 0;
-  transform: translateY(20px);
+.header-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+.page-title {
+  flex: 1;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.profile-card, .password-card {
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.profile-header {
+  background: linear-gradient(to right, #4a69bd, #1e3799);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .profile-header {
+    flex-direction: row;
   }
-  to {
-    opacity: 1;
+}
+
+.profile-image-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 15px;
+}
+
+@media (min-width: 768px) {
+  .profile-image-container {
+    margin-right: 20px;
+    margin-bottom: 0;
   }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+.profile-image, .profile-initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2d2d35;
+  border: 2px solid white;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-initials {
+  background-color: #4a69bd;
+  font-size: 36px;
+  font-weight: bold;
+  color: white;
+}
+
+.camera-button {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #4a69bd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  border: 2px solid white;
+}
+
+.hidden {
+  display: none;
+}
+
+.profile-info {
+  flex: 1;
+  color: white;
+}
+
+.profile-name {
+  margin: 0 0 5px 0;
+  font-size: 20px;
+}
+
+.profile-email {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.profile-form {
+  padding: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr 1fr;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
-.form-label {
-  display: block;
-  margin-bottom: 0.5rem;
+.form-group {
+  margin-bottom: 10px;
 }
 
-.form-input, .form-textarea {
-  padding: 0.75rem;
-  transition: all 0.3s;
+.full-width {
+  grid-column: 1 / -1;
 }
 
-.form-input:focus, .form-textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.3);
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.success-message {
+  margin-left: 15px;
+  color: #52c41a;
+  font-size: 14px;
+}
+
+.password-header {
+  background: linear-gradient(to right, #4a69bd, #1e3799);
+  color: white;
+  padding: 15px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.password-content {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.password-description {
+  margin: 0;
+  color: white;
+  font-size: 14px;
+}
+
+.password-form-container {
+  padding: 0 20px 20px;
+  border-top: 1px solid #444;
+  margin-top: 10px;
 }
 </style>

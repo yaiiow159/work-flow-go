@@ -2,6 +2,9 @@
 import { computed } from 'vue'
 import type { Notification } from '../../types'
 import { formatDistanceToNow } from 'date-fns'
+import { useThemeStore } from '../../stores/theme'
+
+const themeStore = useThemeStore()
 
 const props = defineProps<{
   notification: Notification
@@ -59,8 +62,11 @@ const handleDelete = (event: Event) => {
 <template>
   <div 
     @click="handleMarkAsRead"
-    class="p-3 border-b border-surface-light hover:bg-background-lighter cursor-pointer"
-    :class="{ 'bg-background-lighter': !notification.isRead }"
+    :class="[
+      themeStore.isDarkMode ? 'border-[#2d2d35]' : 'border-gray-200',
+      'p-3 border-b hover:bg-opacity-50 cursor-pointer',
+      !notification.isRead ? (themeStore.isDarkMode ? 'bg-[#232328]' : 'bg-gray-50') : ''
+    ]"
   >
     <div class="flex items-start">
       <div class="mr-3 mt-1">
@@ -68,18 +74,18 @@ const handleDelete = (event: Event) => {
       </div>
       <div class="flex-1">
         <div class="flex justify-between">
-          <h4 class="font-medium">{{ notification.title }}</h4>
+          <h4 :class="[themeStore.isDarkMode ? 'text-white' : 'text-gray-800', 'font-medium']">{{ notification.title }}</h4>
           <div class="flex items-center">
-            <span class="text-xs text-text-muted mr-2">{{ formattedDate }}</span>
+            <span :class="[themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500', 'text-xs mr-2']">{{ formattedDate }}</span>
             <button 
               @click="handleDelete"
-              class="text-text-muted hover:text-error transition-colors duration-200"
+              :class="[themeStore.isDarkMode ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-600', 'transition-colors duration-200']"
             >
               <i class="pi pi-times"></i>
             </button>
           </div>
         </div>
-        <p class="text-sm text-text-secondary mt-1">{{ notification.message }}</p>
+        <p :class="[themeStore.isDarkMode ? 'text-gray-300' : 'text-gray-600', 'text-sm mt-1']">{{ notification.message }}</p>
       </div>
     </div>
   </div>

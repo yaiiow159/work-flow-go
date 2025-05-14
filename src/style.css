@@ -8,8 +8,6 @@
   font-family: 'Lato', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: dark;
   
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -20,6 +18,16 @@
 body {
   margin: 0;
   min-height: 100vh;
+}
+
+/* Light theme (default) */
+body:not(.dark-theme) {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+/* Dark theme */
+body.dark-theme {
   background-color: #242424;
   color: rgba(255, 255, 255, 0.87);
 }
@@ -153,7 +161,6 @@ button:focus-visible {
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
   }
   a:hover {
     color: #747bff;

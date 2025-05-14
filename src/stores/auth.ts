@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '../types/user'
-import type {UserInfo, UserProfileDTO} from '../types'
+import type {UserInfo} from '../types'
 import authService from '../services/auth'
 import { userSettingsApi } from '../services/api'
 
@@ -19,6 +19,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (storedUser) {
       try {
         user.value = JSON.parse(storedUser)
+        
+        if (user.value && user.value.id) {
+          localStorage.setItem('userId', user.value.id.toString())
+        }
+        
         await authService.validateToken()
       } catch (err) {
         logout()
@@ -37,6 +42,11 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.user && response.user.token) {
         localStorage.setItem('token', response.user.token)
       }
+      
+      if (response.user && response.user.id) {
+        localStorage.setItem('userId', response.user.id.toString())
+      }
+      
       return true
     } catch (err: any) {
       error.value = err.message || 'Login failed'
@@ -86,6 +96,7 @@ export const useAuthStore = defineStore('auth', () => {
       userInfo.value = null
       localStorage.removeItem('user')
       localStorage.removeItem('token')
+      localStorage.removeItem('userId')
       
       window.location.href = '/login'
     }
@@ -96,23 +107,35 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     
     try {
-      const userProfile: UserProfileDTO = await userSettingsApi.uploadProfileImage(file)
+      const result = await userSettingsApi.uploadProfileImage(file)
       
-      if (userInfo.value && userProfile.photoURL) {
-        userInfo.value = {
-          ...userInfo.value,
-          photoURL: userProfile.photoURL
+      if (result.success) {
+        const baseURL = import.meta.env.VITE_API_URL || '';
+        
+        if (userInfo.value) {
+          userInfo.value = {
+            ...userInfo.value,
+            photoURL: result.photoURL || `${baseURL}/users/profile/profile-image/${user.value?.id}`
+          }
         }
-      }
-      
-      if (user.value && userProfile.photoURL) {
-        user.value = {
-          ...user.value,
-          photoURL: userProfile.photoURL
+        
+        if (user.value) {
+          user.value = {
+            ...user.value,
+            photoURL: result.photoURL || `${baseURL}/users/profile/profile-image/${user.value.id}`
+          }
+          localStorage.setItem('user', JSON.stringify(user.value))
+          
+          if (user.value.id) {
+            localStorage.setItem('userId', user.value.id.toString())
+          }
         }
-        localStorage.setItem('user', JSON.stringify(user.value))
+        
+        return true
+      } else {
+        error.value = result.error || 'Failed to update profile image'
+        return false
       }
-      return true
     } catch (err: any) {
       error.value = err.message || 'Failed to update profile image'
       return false

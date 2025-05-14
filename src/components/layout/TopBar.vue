@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationsStore } from '../../stores/notifications'
 import { useThemeStore } from '../../stores/theme'
 import NotificationItem from '../notifications/NotificationItem.vue'
 
 const emit = defineEmits(['toggle-sidebar'])
-const router = useRouter()
 const authStore = useAuthStore()
 const notificationsStore = useNotificationsStore()
 const themeStore = useThemeStore()
 const userDisplayName = computed(() => authStore.userDisplayName)
+
+onMounted(() => {
+  themeStore.initTheme()
+  document.addEventListener('click', closeMenus)
+  notificationsStore.fetchNotifications().catch(e => {
+    console.error('Failed to fetch notifications:', e)
+  })
+})
 
 const toggleSidebar = () => {
   emit('toggle-sidebar')
@@ -26,6 +32,7 @@ const currentDate = new Date().toLocaleDateString('en-US', {
 
 const showNotifications = ref(false)
 const showUserMenu = ref(false)
+const userMenuRef = ref(null)
 
 const closeMenus = (event: MouseEvent) => {
   const notificationMenu = document.getElementById('notification-menu')
@@ -56,10 +63,9 @@ const toggleNotifications = (event: MouseEvent) => {
   }
 }
 
-const toggleUserMenu = (event: MouseEvent) => {
+const toggleUserMenu = (event: Event) => {
   event.stopPropagation()
   showUserMenu.value = !showUserMenu.value
-  
   if (showUserMenu.value) {
     showNotifications.value = false
   }
@@ -79,14 +85,7 @@ const handleDeleteNotification = (id: string) => {
 
 const handleLogout = () => {
   authStore.logout()
-}
-
-const goToSettings = () => {
-  router.push('/settings')
-}
-
-const goToProfile = () => {
-  router.push('/profile')
+  showUserMenu.value = false
 }
 
 const userPhotoURL = computed(() => authStore.user?.photoURL)
@@ -121,46 +120,77 @@ const adjustColor = (hex: string, percent: number): string => {
 
 const primaryColorHover = computed(() => adjustColor(primaryColor.value, 10))
 
-onMounted(() => {
-  document.addEventListener('click', closeMenus)
-  notificationsStore.fetchNotifications().catch(e => {
-    console.error('Failed to fetch notifications:', e)
-  })
-})
-
 onUnmounted(() => {
   document.removeEventListener('click', closeMenus)
 })
 </script>
 
 <template>
-  <header class="bg-[#18181c] border-b border-[#2d2d35] px-4 py-3">
+  <header :class="[
+    themeStore.isDarkMode ? 'bg-[#18181c]' : 'bg-white', 
+    themeStore.isDarkMode ? 'border-[#2d2d35]' : 'border-gray-200',
+    'border-b', 
+    'px-4', 
+    'py-3',
+    'shadow-sm'
+  ]">
     <div class="flex justify-between items-center">
       <div class="flex items-center">
         <button
           @click="toggleSidebar"
-          class="p-2 rounded-md text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200"
+          :class="[
+            themeStore.isDarkMode ? 'text-gray-300 bg-[#2d2d35]' : 'text-gray-700 bg-gray-100', 
+            'p-2', 
+            'rounded-md', 
+            'transition-colors', 
+            'duration-200',
+            'flex',
+            'items-center',
+            'justify-center'
+          ]"
         >
           <i class="pi pi-bars" style="font-size: 1.1rem;"></i>
         </button>
-
-        <div class="ml-4 hidden md:block">
-          <h2 class="text-lg font-medium text-white">{{ currentDate }}</h2>
+        
+        <div class="ml-4">
+          <h1 class="text-lg font-semibold" :class="themeStore.isDarkMode ? 'text-white' : 'text-gray-800'">WorkFlowGo</h1>
+          <p class="text-sm" :class="themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600'">{{ currentDate }}</p>
         </div>
       </div>
-
+      
       <div class="flex items-center space-x-4">
-        <router-link
-          to="/interviews/new"
-          :class="`btn btn-primary hidden sm:flex items-center px-3 py-1.5 rounded-md bg-[${primaryColor}] hover:bg-[${primaryColorHover}] text-white transition-colors duration-200`"
+        <!-- New Interview Button -->
+        <a 
+          href="/interviews/new"
+          :style="{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            backgroundColor: themeStore.isDarkMode ? '#4a69bd' : primaryColor,
+            color: 'white',
+            fontWeight: '500',
+            border: themeStore.isDarkMode ? '1px solid #5a79cd' : '1px solid transparent',
+            boxShadow: themeStore.isDarkMode ? '0 2px 4px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease'
+          }"
         >
           <i class="pi pi-plus mr-2" style="font-size: 0.9rem;"></i>
           <span>New Interview</span>
-        </router-link>
+        </a>
 
         <button
           @click="themeStore.toggleDarkMode"
-          class="p-2 rounded-full text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200"
+          :class="[
+            themeStore.isDarkMode ? 'text-yellow-400 bg-[#2d2d35]' : 'text-blue-600 bg-gray-100', 
+            'p-2', 
+            'rounded-full', 
+            'transition-colors', 
+            'duration-200',
+            'flex',
+            'items-center',
+            'justify-center'
+          ]"
           aria-label="Toggle dark mode"
         >
           <i v-if="themeStore.isDarkMode" class="pi pi-sun" style="font-size: 1.1rem;"></i>
@@ -171,7 +201,17 @@ onUnmounted(() => {
           <button
             id="notification-button"
             @click="toggleNotifications($event)"
-            class="p-2 rounded-full text-gray-400 hover:bg-[#2d2d35] hover:text-white transition-colors duration-200 relative"
+            :class="[
+              themeStore.isDarkMode ? 'text-gray-300 bg-[#2d2d35]' : 'text-gray-700 bg-gray-100', 
+              'p-2', 
+              'rounded-full', 
+              'transition-colors', 
+              'duration-200', 
+              'relative',
+              'flex',
+              'items-center',
+              'justify-center'
+            ]"
             aria-label="Toggle notifications"
           >
             <i class="pi pi-bell" style="font-size: 1.1rem;"></i>
@@ -184,10 +224,10 @@ onUnmounted(() => {
           <div
             id="notification-menu"
             v-show="showNotifications"
-            class="absolute right-0 mt-2 w-80 bg-[#18181c] rounded-md shadow-lg z-10 overflow-hidden border border-[#2d2d35]"
+            :class="[themeStore.isDarkMode ? 'bg-[#18181c]' : 'bg-white', themeStore.isDarkMode ? 'border border-[#2d2d35]' : 'border border-gray-200', 'absolute', 'right-0', 'mt-2', 'w-80', 'rounded-md', 'shadow-lg', 'z-10', 'overflow-hidden']"
           >
-            <div class="p-3 border-b border-[#2d2d35] flex justify-between items-center">
-              <h3 class="font-medium text-white">Notifications</h3>
+            <div :class="[themeStore.isDarkMode ? 'border-b border-[#2d2d35]' : 'border-b border-gray-200', 'p-3', 'flex', 'justify-between', 'items-center']">
+              <h3 :class="[themeStore.isDarkMode ? 'text-white' : 'text-gray-800', 'font-medium']">Notifications</h3>
               <span v-if="notificationsStore.unreadCount > 0" :class="`text-xs bg-[${primaryColor}] text-white px-2 py-0.5 rounded-full`">
                 {{ notificationsStore.unreadCount }}
               </span>
@@ -203,12 +243,12 @@ onUnmounted(() => {
                   @delete="handleDeleteNotification"
                 />
               </template>
-              <div v-else class="p-4 text-center text-gray-400">
+              <div v-else :class="[themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-500', 'p-4 text-center']">
                 No notifications
               </div>
             </div>
 
-            <div v-if="notificationsStore.notifications.length > 0" class="p-2 border-t border-[#2d2d35] text-center">
+            <div v-if="notificationsStore.notifications.length > 0" :class="[themeStore.isDarkMode ? 'border-t border-[#2d2d35]' : 'border-t border-gray-200', 'p-2 text-center']">
               <button
                 @click="handleMarkAllAsRead"
                 :class="`text-sm text-[${primaryColor}] hover:text-[${primaryColorHover}]`"
@@ -223,48 +263,105 @@ onUnmounted(() => {
           <button 
             id="user-menu-button"
             @click="toggleUserMenu($event)" 
-            class="flex items-center space-x-2"
+            :class="[
+              themeStore.isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900', 
+              'flex', 
+              'items-center', 
+              'space-x-2',
+              'p-1',
+              'rounded-full',
+              'hover:bg-opacity-10',
+              themeStore.isDarkMode ? 'hover:bg-gray-400' : 'hover:bg-gray-500'
+            ]"
           >
-            <div v-if="userPhotoURL" class="w-8 h-8 rounded-full overflow-hidden border border-[#2d2d35]">
+            <div v-if="userPhotoURL" :class="[themeStore.isDarkMode ? 'border-[#2d2d35]' : 'border-gray-200', 'w-8', 'h-8', 'rounded-full', 'overflow-hidden', 'border']">
               <img :src="userPhotoURL" alt="User" class="w-full h-full object-cover" />
             </div>
-            <div v-else class="w-8 h-8 rounded-full bg-[#4a69bd] flex items-center justify-center text-white border border-[#2d2d35]">
+            <div v-else :class="[themeStore.isDarkMode ? 'border-[#2d2d35]' : 'border-gray-300', 'w-8', 'h-8', 'rounded-full', 'bg-[#4a69bd]', 'flex', 'items-center', 'justify-center', 'text-white', 'border']">
               <span class="text-sm font-medium">{{ userInitials }}</span>
             </div>
           </button>
           
           <div
             id="user-menu"
+            ref="userMenuRef"
             v-show="showUserMenu" 
-            class="absolute right-0 mt-2 w-48 bg-[#18181c] rounded-md shadow-lg z-10 border border-[#2d2d35]"
+            :class="[
+              themeStore.isDarkMode ? 'bg-[#18181c]' : 'bg-white', 
+              themeStore.isDarkMode ? 'border-[#2d2d35]' : 'border-gray-200', 
+              'absolute', 
+              'right-0', 
+              'mt-2', 
+              'w-48', 
+              'rounded-md', 
+              'shadow-lg', 
+              'z-10',
+              'border'
+            ]"
           >
-            <div class="p-3 border-b border-[#2d2d35]">
-              <h3 class="font-medium text-white">{{ userDisplayName }}</h3>
-              <p class="text-xs text-gray-400">
+            <div :class="[
+              themeStore.isDarkMode ? 'border-[#2d2d35]' : 'border-gray-200', 
+              'border-b', 
+              'p-3'
+            ]">
+              <h3 :class="[
+                themeStore.isDarkMode ? 'text-white' : 'text-gray-800', 
+                'font-medium'
+              ]">{{ userDisplayName }}</h3>
+              <p :class="[
+                themeStore.isDarkMode ? 'text-gray-400' : 'text-gray-600',
+                'text-sm'
+              ]">
                 {{ authStore.user?.email }}
               </p>
             </div>
             
             <div class="py-1">
-              <button 
-                @click="goToProfile"
-                class="w-full text-left px-4 py-2 hover:bg-[#2d2d35] text-gray-300"
+              <router-link 
+                to="/profile"
+                :class="[
+                  themeStore.isDarkMode ? 'bg-[#18181c] text-gray-300 hover:bg-[#2d2d35]' : 'bg-white text-gray-700 hover:bg-gray-100', 
+                  'block', 
+                  'w-full', 
+                  'text-left', 
+                  'px-4', 
+                  'py-2',
+                  'flex',
+                  'items-center'
+                ]"
               >
                 <i class="pi pi-user mr-2" style="font-size: 0.9rem;"></i>
                 Profile
-              </button>
+              </router-link>
               
-              <button 
-                @click="goToSettings"
-                class="w-full text-left px-4 py-2 hover:bg-[#2d2d35] text-gray-300"
+              <router-link 
+                to="/settings"
+                :class="[
+                  themeStore.isDarkMode ? 'bg-[#18181c] text-gray-300 hover:bg-[#2d2d35]' : 'bg-white text-gray-700 hover:bg-gray-100', 
+                  'block', 
+                  'w-full', 
+                  'text-left', 
+                  'px-4', 
+                  'py-2',
+                  'flex',
+                  'items-center'
+                ]"
               >
                 <i class="pi pi-cog mr-2" style="font-size: 0.9rem;"></i>
                 Settings
-              </button>
+              </router-link>
               
               <button 
                 @click="handleLogout"
-                class="w-full text-left px-4 py-2 hover:bg-[#2d2d35] text-red-400"
+                :class="[
+                  themeStore.isDarkMode ? 'bg-[#18181c] text-red-400 hover:bg-[#2d2d35]' : 'bg-white text-red-600 hover:bg-gray-100', 
+                  'w-full', 
+                  'text-left', 
+                  'px-4', 
+                  'py-2',
+                  'flex',
+                  'items-center'
+                ]"
               >
                 <i class="pi pi-sign-out mr-2" style="font-size: 0.9rem;"></i>
                 Logout

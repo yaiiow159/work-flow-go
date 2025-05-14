@@ -75,7 +75,18 @@ export const documentsApi = {
   },
   
   update: async (id: string, document: Partial<Document>) => {
-    const response = await axiosInstance.put<Document>(`/documents/${id}`, document)
+    const formData = new FormData()
+    formData.append('name', document.name || '')
+    
+    if (document.file) {
+      formData.append('file', document.file)
+    }
+    
+    const response = await axiosInstance.put<Document>(`/documents/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
     return response.data
   },
 
@@ -85,10 +96,7 @@ export const documentsApi = {
   
   getDownloadUrl: async (id: string) => {
     try {
-      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/download`, {
-        responseType: 'json'
-      })
-      return response.data.url
+      return `/documents/${id}/download`
     } catch (error) {
       console.error('Error getting download URL:', error)
       throw error
@@ -97,14 +105,53 @@ export const documentsApi = {
   
   getViewUrl: async (id: string) => {
     try {
-      const response = await axiosInstance.get<{ url: string }>(`/documents/${id}/view`, {
-        responseType: 'json'
-      })
-      return response.data.url
+      return `/documents/${id}/view`
     } catch (error) {
       console.error('Error getting view URL:', error)
       throw error
     }
+  },
+  
+  downloadFile: async (id: string) => {
+    try {
+      const response = await axiosInstance.get(`/documents/${id}/file`, {
+        responseType: 'blob'
+      })
+      
+      const blob = new Blob([response.data], {
+        type: response.headers['content-type'] 
+      })
+      const url = window.URL.createObjectURL(blob)
+      
+      const contentDisposition = response.headers['content-disposition']
+      let filename = 'document'
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1]
+        }
+      }
+      
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(link)
+      
+      return true
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      throw error
+    }
+  },
+  
+  getCount: async () => {
+    const response = await axiosInstance.get<number>('/documents/count')
+    return response.data
   }
 }
 
@@ -145,11 +192,36 @@ export const userSettingsApi = {
     const formData = new FormData()
     formData.append('file', file)
     
-    const response = await axiosInstance.post<UserProfileDTO>('/users/profile/profile-image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    try {
+      const response = await axiosInstance.post('/users/profile/profile-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
+      const photoURL = typeof response.data === 'string' ? response.data : null
+      
+      return {
+        success: true,
+        userId: response.data.userId || response.data.id || null,
+        photoURL: photoURL
       }
-    })
+    } catch (error) {
+      console.error('Error uploading profile image:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  },
+
+  getUserProfile: async () => {
+    const response = await axiosInstance.get<UserProfileDTO>('/users/profile')
+    return response.data
+  },
+
+  updateUserProfile: async (profileData: UserProfileRequest) => {
+    const response = await axiosInstance.put<UserProfileDTO>('/users/profile', profileData)
     return response.data
   },
 
@@ -164,6 +236,14 @@ export const userSettingsApi = {
     const response = await axiosInstance.post<UserSettingsDTO>('/user/settings/reset')
     return response.data
   }
+}
+
+export function useUserSettingsApi() {
+  return userSettingsApi
+}
+
+export function useUserApi() {
+  return userApi
 }
 
 export const statisticsApi = {

@@ -27,6 +27,17 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isUploading = ref(false)
 const showUploadModal = ref(false)
 const fileList = ref<UploadFileInfo[]>([])
+const profileImageUrl = computed(() => {
+  if (!user.value?.photoURL) return '';
+  
+  if (user.value.photoURL.startsWith('http')) {
+    return user.value.photoURL;
+  }
+  
+  const baseURL = import.meta.env.VITE_API_URL || '';
+  const userId = user.value.id;
+  return `${baseURL}/users/profile/profile-image/${userId}?t=${Date.now()}`;
+})
 
 const options = computed(() => [
   {
@@ -78,11 +89,25 @@ const handleUpload = async ({ file }: { file: UploadFileInfo }) => {
 
   isUploading.value = true
   try {
-    const success = await authStore.updateProfileImage(file.file as File)
-    if (success) {
+    const result = await authStore.updateProfileImage(file.file as File)
+    if (result) {
       message.success('Profile image updated successfully')
       showUploadModal.value = false
       fileList.value = []
+      
+      setTimeout(() => {
+        const refreshTimestamp = Date.now()
+        if (user.value) {
+          const currentUrl = user.value.photoURL || ''
+          if (currentUrl.includes('?t=')) {
+            user.value.photoURL = currentUrl.split('?t=')[0] + `?t=${refreshTimestamp}`
+          } else if (currentUrl.includes('?')) {
+            user.value.photoURL = currentUrl + `&t=${refreshTimestamp}`
+          } else if (currentUrl) {
+            user.value.photoURL = currentUrl + `?t=${refreshTimestamp}`
+          }
+        }
+      }, 100)
     } else {
       message.error(authStore.error || 'Failed to update profile image')
     }
@@ -107,7 +132,7 @@ const closeUploadModal = () => {
         <n-space align="center">
           <n-avatar 
             v-if="user?.photoURL" 
-            :src="user.photoURL" 
+            :src="profileImageUrl" 
             round 
             size="small"
           />

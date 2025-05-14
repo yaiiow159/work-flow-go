@@ -26,6 +26,7 @@ export interface Document {
   contentType?: string
   size?: number
   createdAt?: string
+  file?: File
 }
 
 export interface Interview {

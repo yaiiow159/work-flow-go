@@ -35,7 +35,7 @@ import {
 } from '@vicons/ionicons5'
 import {format} from 'date-fns'
 import {handleApiError, handleSuccess} from '../utils/errorHandler'
-import CloudinaryViewer from '../components/documents/CloudinaryViewer.vue'
+import DocumentViewer from '../components/documents/DocumentViewer.vue'
 
 const message = useMessage()
 const isLoading = ref(false)
@@ -163,16 +163,8 @@ const deleteDocument = async (id: string) => {
 const downloadDocument = async (doc: Document) => {
   try {
     isLoading.value = true
-    const downloadUrl = await documentsApi.getDownloadUrl(doc.id)
     
-    const link = document.createElement('a')
-    link.href = downloadUrl
-    link.setAttribute('download', doc.name)
-    link.setAttribute('target', '_blank')
-    
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    await documentsApi.downloadFile(doc.id)
     
     handleSuccess('Download started')
   } catch (error) {
@@ -184,7 +176,18 @@ const downloadDocument = async (doc: Document) => {
 
 const viewDocument = async (doc: Document) => {
   try {
-    previewDocument.value = doc
+    if (doc.id) {
+      const viewUrl = await documentsApi.getViewUrl(doc.id)
+      
+      // Update the document with the fresh URL
+      previewDocument.value = {
+        ...doc,
+        url: viewUrl
+      }
+    } else {
+      previewDocument.value = doc
+    }
+    
     showPreviewModal.value = true
   } catch (error) {
     handleApiError(error, 'View Failed')
@@ -426,7 +429,7 @@ const columns = [
         </template>
         
         <div style="min-height: 600px;">
-          <CloudinaryViewer
+          <DocumentViewer
             v-if="previewDocument"
             :document-id="previewDocument.id"
             :document-url="previewDocument.url"

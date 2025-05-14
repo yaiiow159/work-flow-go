@@ -3,6 +3,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import MainLayout from '../components/layout/MainLayout.vue'
 import { useInterviewStore } from '../stores/interview'
+import { useThemeStore } from '../stores/theme'
 import { v4 as uuidv4 } from 'uuid'
 import type { Interview } from '../types'
 import { documentsApi } from '../services/api'
@@ -47,6 +48,7 @@ import { handleApiError, handleSuccess } from '../utils/errorHandler'
 const router = useRouter()
 const route = useRoute()
 const interviewStore = useInterviewStore()
+const themeStore = useThemeStore()
 const message = useMessage()
 const formRef = ref<any>(null)
 
@@ -396,7 +398,14 @@ onMounted(async () => {
                       <textarea 
                         v-model="formModel.notes" 
                         placeholder="Enter any notes about the interview"
-                        style="width: 100%; padding: 8px; border: 1px solid; border-radius: 4px;"
+                        :style="{
+                          width: '100%', 
+                          padding: '8px', 
+                          borderRadius: '4px',
+                          backgroundColor: themeStore.isDarkMode ? '#18181c' : '#ffffff',
+                          color: themeStore.isDarkMode ? '#ffffff' : '#333333',
+                          border: themeStore.isDarkMode ? '1px solid #2d2d35' : '1px solid #e2e8f0'
+                        }"
                       />
                     </n-form-item>
                   </div>
@@ -470,10 +479,11 @@ onMounted(async () => {
                           />
                         </n-input-group>
                         
-                        <textarea 
-                          v-model="question.answer" 
+                        <n-input 
+                          v-model:value="question.answer" 
+                          type="textarea"
                           placeholder="Enter your answer (optional)"
-                          style="width: 100%; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px;"
+                          :autosize="{ minRows: 3, maxRows: 6 }"
                         />
                         
                         <div style="display: flex; align-items: center;">

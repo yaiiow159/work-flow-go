@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, computed } from 'vue'
 import {
   NConfigProvider,
   NDialogProvider,
   NLoadingBarProvider,
   NMessageProvider,
-  NNotificationProvider
+  NNotificationProvider,
+  darkTheme,
+  lightTheme
 } from 'naive-ui'
 import { RouterView } from 'vue-router'
 import { useThemeStore } from './stores/theme'
@@ -16,6 +18,9 @@ import { startInterviewReminderService, stopInterviewReminderService } from './s
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 const { connect, disconnect } = useWebSocket()
+
+// Compute the current theme based on the isDarkMode state
+const currentTheme = computed(() => themeStore.isDarkMode ? darkTheme : lightTheme)
 
 watch(() => authStore.isAuthenticated, (isAuthenticated) => {
   if (isAuthenticated) {
@@ -33,7 +38,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <n-config-provider :theme="themeStore.theme" :theme-overrides="themeStore.themeOverrides">
+  <n-config-provider :theme="currentTheme" :theme-overrides="themeStore.themeOverrides">
     <n-loading-bar-provider>
       <n-dialog-provider>
         <n-notification-provider>
